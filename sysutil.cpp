@@ -155,7 +155,7 @@ void fileSend(int desSocket,char *filename)
     }
     int bytes_to_send = sbuf.st_size; //  文件大小
     CHEN_LOG(DEBUG,"file size:%d\n",bytes_to_send);
-    writen(desSocket,&bytes_to_send,sizeof(bytes_to_send)); //先发送文件大小
+//    writen(desSocket,&bytes_to_send,sizeof(bytes_to_send)); //先发送文件大小
     //开始传输
     while(bytes_to_send)
     {
@@ -208,5 +208,5 @@ void fileRecv(int recvSocket,char *filename,int size)
             size -= ret;
     }
 }
-
 }
+

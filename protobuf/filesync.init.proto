@@ -1,0 +1,8 @@
+package filesync;
+message init
+{
+    required int32 id = 1;    //消息标识
+    required string filename = 2;   //文件名（包含相对路径）
+    required int32 size = 3;  //文件大小
+    required string MD5 = 4;    //文件的md5
+}
