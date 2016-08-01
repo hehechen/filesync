@@ -8,7 +8,8 @@ CONFIG += console
 CONFIG -= app_bundle
 
 LIBS +=  -L/usr/lib -lprotobuf -lcrypt -lpthread    \
-         -L/home/chen/Desktop/work/build/release-install/lib -lmuduo_net -lmuduo_base
+         -L/home/chen/Desktop/work/build/release-install/lib -lmuduo_net -lmuduo_base   \
+         -lz
 INCLUDEPATH += /usr/local/include/google/protobuf   \
                 /home/chen/Desktop/work/build/release-install/include
 
@@ -20,17 +21,20 @@ SOURCES += main.cpp \
     test/socketTest.cpp \
     test/filesendtest.cpp \
     test/prototest.cpp \
-    protobuf/filesync.init.pb.cc \
     test/muduo_test.cpp \
-    syncserver.cpp
+    syncserver.cpp \
+    protobuf/filesync.pb.cc \
+    codec.cpp
 
 HEADERS += \
     socket.h \
     common.h \
     sysutil.h \
-    protobuf/filesync.init.pb.h \
     test/echo.h \
-    syncserver.h
+    syncserver.h \
+    protobuf/filesync.sendfile.pb.h \
+    protobuf/filesync.pb.h \
+    codec.h
 
 DISTFILES += \
-    protobuf/filesync.init.proto
+    protobuf/filesync.proto

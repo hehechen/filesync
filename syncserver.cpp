@@ -1,118 +1,124 @@
 #include "syncserver.h"
+#include "sysutil.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <functional>
 #include <boost/bind.hpp>
-#include <muduo/base/Logging.h>
 #include <muduo/net/TcpServer.h>
 #include <muduo/net/InetAddress.h>
 #include <fstream>
-
-#include "protobuf/filesync.init.pb.h"
 
 SyncServer::SyncServer(muduo::net::EventLoop *loop,int port):serverAddr(port),
     server_(loop,serverAddr,"syncServer")
 {
     server_.setConnectionCallback(boost::bind(&SyncServer::onConnection,this,_1));
     server_.setMessageCallback(boost::bind(&SyncServer::onMessage,this,_1,_2,_3));
+
+    codec.registerCallback<filesync::syncInfo>(std::bind(&SyncServer::onSyncInfo,this,
+                                                         std::placeholders::_1,std::placeholders::_2));
+    codec.registerCallback<filesync::fileInfo>(std::bind(&SyncServer::onFileInfo,this,
+                                                         std::placeholders::_1,std::placeholders::_2));
 }
 //连接到来时，更新ipMap，并根据此ip的连接次数设置此conn的类型
 void SyncServer::onConnection(const muduo::net::TcpConnectionPtr &conn)
 {
-    struct Info_Conn info;
+    Info_ConnPtr info_ptr(new Info_Conn );
     muduo::string ip = conn->peerAddress().toIp();
     auto it = ipMaps.find(ip);
     if(it != ipMaps.end())
     {
-        int times = it->second.size();
         it->second.push_back(conn);
-        info.type = ConType(times+1);
-        conn->setContext(info);
+        info_ptr->type = ConType::DATA;
+        conn->setContext(info_ptr);
     }
     else
     {
         Con_Vec vec;
         vec.push_back(conn);
         ipMaps.insert(make_pair(ip,std::move(vec)));
-        info.type = CONTROL;
-        conn->setContext(info);
+        info_ptr->type = CONTROL;
+        conn->setContext(info_ptr);
     }
 }
 //接收到原始的数据包后的处理,根据conn的不同采取不同的处理
 void SyncServer::onMessage(const muduo::net::TcpConnectionPtr &conn,
-                          muduo::net::Buffer *buf,muduo::Timestamp receiveTime)
+                           muduo::net::Buffer *buf,muduo::Timestamp receiveTime)
 {
-    struct Info_Conn info = boost::any_cast<Info_Conn>(conn->getContext());
-    if(info.type == CONTROL)
+    Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
+    if(info_ptr->type == CONTROL)
     {//控制通道
-        while (buf->readableBytes() >= KHeaderLen) // kHeaderLen == 4
-        {
-            const void* data = buf->peek();
-            int32_t len = *static_cast<const int32_t*>(data); // SIGBUS
-            if (len > 65536 || len < 0)
-            {
-                LOG_ERROR << "Invalid length " << len;
-                conn->shutdown();
-                break;
-            }
-            else if (buf->readableBytes() >= len + KHeaderLen)
-            {//该消息已经全部发送过来
-                buf->retrieve(KHeaderLen);
-                string message(buf->peek(), len);
-                onStringMessage(conn,message,receiveTime);
-                buf->retrieve(len);
-            }
-            else
-            {
-                break;
-            }
+        codec.parse(conn,buf);
+    }
+    else
+    {//文件传输通道有数据到来，判断是消息还是文件数据
+        if(info_ptr->isRecving)
+        {//是文件数据
+            recvFile(info_ptr,buf);
         }
+
+        else
+        {//解析信息并调用onFileInfo
+            codec.parse(conn,buf);
+        }
+    }
+}
+//收到客户端发来的修改信息
+void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
+                            const syncInfoPtr &message)
+{
+    int id = message->id();
+    string filename = message->filename();
+    switch(id)
+    {
+    case 1:
+    {//创建文件
+    }
+    case 2:
+    {//文件内容修改
+        //向客户端发送sendfile命令
+        filesync::sendfile msg;
+        msg.set_id(1);
+        msg.set_filename(filename);
+        std::string cmd = codec.enCode(msg);
+        CHEN_LOG(DEBUG,"syncInfo 1 :----%s",cmd.c_str());
+        conn->send(cmd);
+        break;
+    }
+    }
+}
+//解析fileInfo消息后的回调函数
+void SyncServer::onFileInfo(const muduo::net::TcpConnectionPtr &conn,
+                            const fileInfoPtr &message)
+{
+    Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
+    info_ptr->isRecving = true;
+    info_ptr->filename = std::move(message->filename());
+    info_ptr->totalSize = info_ptr->remainSize = message->size();
+    recvFile(info_ptr,conn->inputBuffer());
+}
+/**
+ * @brief SyncServer::recvFile  从Buffer中接收文件数据
+ * @param info_ptr
+ * @param inputBuffer
+ */
+void SyncServer::recvFile(Info_ConnPtr &info_ptr, muduo::net::Buffer *inputBuffer)
+{
+    int len = inputBuffer->readableBytes();
+    if(len >= info_ptr->remainSize)
+    {//文件接受完
+        sysutil::fileRecvfromBuf(info_ptr->filename.c_str(),
+                                 inputBuffer->peek(),info_ptr->remainSize);
+        info_ptr->isRecving = false;
+        info_ptr->remainSize = 0;
+        info_ptr->totalSize = 0;
+        info_ptr->filename.clear();
     }
     else
     {
-        if(info.filename.empty())
-            LOG_ERROR<< "filename don't exit";
-        else
-        {//接收文件
-            if(buf->readableBytes() > info.remain_size)
-                LOG_ERROR<< "Invalid length";
-            else
-            {
-                fstream file;
-                file.open(info.filename.c_str(),ofstream::out | fstream::app);
-                string message(buf->peek(), buf->readableBytes());
-                file<<message;
-                file.close();
-                buf->retrieve(buf->readableBytes());
-                info.remain_size -= buf->readableBytes();
-            }
-        }
+        sysutil::fileRecvfromBuf(info_ptr->filename.c_str(),
+                                 inputBuffer->peek(),len);
+        info_ptr->remainSize -= len;
     }
-
-}
-//解析到来自客户端的信息后根据文件大小选择相应的conn
-void SyncServer::onStringMessage(const muduo::net::TcpConnectionPtr &conn,
-                                 const string &message, muduo::Timestamp)
-{
-    filesync::init msg;
-    msg.ParseFromString(message);
-    int size = msg.size();
-    muduo::string ip = conn->peerAddress().toIp();
-    auto it = ipMaps.find(ip);
-    if(it == ipMaps.end())
-        LOG_ERROR<<"IP don't exit";
-    Con_Vec desCons = it->second;
-    if(desCons.size() !=3 )
-        LOG_ERROR<<"connection break"<<endl;
-    //根据文件大小选择相应的conn
-    struct Info_Conn info;
-    if(size >1024*1024*100) //100M
-        info = boost::any_cast<Info_Conn>
-                (desCons[2]->getContext());
-    else
-        info = boost::any_cast<Info_Conn>
-                (desCons[1]->getContext());
-    info.filename = msg.filename();
-    info.total_size = msg.size();
-    info.remain_size = msg.size();
 }

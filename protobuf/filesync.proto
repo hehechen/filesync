@@ -1,0 +1,25 @@
+package filesync;
+message syncInfo
+{//告知哪些文件有修改
+    required int32 id = 1;    //消息标识,增删改等
+    required string filename = 2;   //文件名（包含相对路径）
+    optional int32 size = 3;  //文件大小
+    optional string MD5 = 4;    //文件的md5
+}
+
+message sendfile
+{//告知哪些文件需要发送或接受
+    required int32 id = 1;  //消息标识，0:服务器传给客户端,1:客户端传给服务器
+    required string filename = 2;   
+}
+/*****以上是控制通道负责*********/
+/*****以下是文件传输通道********/
+message fileInfo
+{
+    required int32 size = 1;    //文件大小
+    required string filename = 2;//文件名
+}
+
+
+
+
