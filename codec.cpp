@@ -32,7 +32,8 @@ void Codec::parse(const muduo::net::TcpConnectionPtr &conn, muduo::net::Buffer *
             LOG_ERROR<<"parse protobuf error:invalid length";
             break;
         }
-        else if (inputBuffer->readableBytes() >= muduo::implicit_cast<size_t>(len + kHeaderLen))
+        else if (inputBuffer->readableBytes() >=
+                 muduo::implicit_cast<size_t>(len + kHeaderLen))
         {
             MessagePtr message = parse_aux(inputBuffer->peek()+kHeaderLen,len);
             if (message)

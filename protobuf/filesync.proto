@@ -12,6 +12,11 @@ message sendfile
     required int32 id = 1;  //消息标识，0:服务器传给客户端,1:客户端传给服务器
     required string filename = 2;   
 }
+
+message isControl
+{//这是传输通道
+    required int32 id = 1;
+}
 /*****以上是控制通道负责*********/
 /*****以下是文件传输通道********/
 message fileInfo

@@ -37,6 +37,7 @@ void protobuf_AssignDesc_filesync_2eproto();
 void protobuf_ShutdownFile_filesync_2eproto();
 
 class fileInfo;
+class isControl;
 class sendfile;
 class syncInfo;
 
@@ -286,6 +287,99 @@ class sendfile : public ::google::protobuf::Message /* @@protoc_insertion_point(
 
   void InitAsDefaultInstance();
   static sendfile* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class isControl : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:filesync.isControl) */ {
+ public:
+  isControl();
+  virtual ~isControl();
+
+  isControl(const isControl& from);
+
+  inline isControl& operator=(const isControl& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const isControl& default_instance();
+
+  void Swap(isControl* other);
+
+  // implements Message ----------------------------------------------
+
+  inline isControl* New() const { return New(NULL); }
+
+  isControl* New(::google::protobuf::Arena* arena) const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const isControl& from);
+  void MergeFrom(const isControl& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
+    return InternalSerializeWithCachedSizesToArray(false, output);
+  }
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(isControl* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return _internal_metadata_.arena();
+  }
+  inline void* MaybeArenaPtr() const {
+    return _internal_metadata_.raw_arena_ptr();
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required int32 id = 1;
+  bool has_id() const;
+  void clear_id();
+  static const int kIdFieldNumber = 1;
+  ::google::protobuf::int32 id() const;
+  void set_id(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:filesync.isControl)
+ private:
+  inline void set_has_id();
+  inline void clear_has_id();
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  ::google::protobuf::int32 id_;
+  friend void  protobuf_AddDesc_filesync_2eproto();
+  friend void protobuf_AssignDesc_filesync_2eproto();
+  friend void protobuf_ShutdownFile_filesync_2eproto();
+
+  void InitAsDefaultInstance();
+  static isControl* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -646,6 +740,34 @@ inline void sendfile::set_allocated_filename(::std::string* filename) {
 
 // -------------------------------------------------------------------
 
+// isControl
+
+// required int32 id = 1;
+inline bool isControl::has_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void isControl::set_has_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void isControl::clear_has_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void isControl::clear_id() {
+  id_ = 0;
+  clear_has_id();
+}
+inline ::google::protobuf::int32 isControl::id() const {
+  // @@protoc_insertion_point(field_get:filesync.isControl.id)
+  return id_;
+}
+inline void isControl::set_id(::google::protobuf::int32 value) {
+  set_has_id();
+  id_ = value;
+  // @@protoc_insertion_point(field_set:filesync.isControl.id)
+}
+
+// -------------------------------------------------------------------
+
 // fileInfo
 
 // required int32 size = 1;
@@ -727,6 +849,8 @@ inline void fileInfo::set_allocated_filename(::std::string* filename) {
 }
 
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

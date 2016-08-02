@@ -1,6 +1,7 @@
 #include "syncserver.h"
 #include "sysutil.h"
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -40,6 +41,12 @@ void SyncServer::onConnection(const muduo::net::TcpConnectionPtr &conn)
         ipMaps.insert(make_pair(ip,std::move(vec)));
         info_ptr->type = CONTROL;
         conn->setContext(info_ptr);
+        //告知客户端这是控制通道
+        filesync::isControl msg;
+        msg.set_id(1);
+        std::string send_str = Codec::enCode(msg);
+        conn->send(send_str);
+        CHEN_LOG(DEBUG,"send isControl");
     }
 }
 //接收到原始的数据包后的处理,根据conn的不同采取不同的处理
@@ -49,6 +56,7 @@ void SyncServer::onMessage(const muduo::net::TcpConnectionPtr &conn,
     Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
     if(info_ptr->type == CONTROL)
     {//控制通道
+        CHEN_LOG(DEBUG,"cmd parse...");
         codec.parse(conn,buf);
     }
     else
@@ -60,6 +68,7 @@ void SyncServer::onMessage(const muduo::net::TcpConnectionPtr &conn,
 
         else
         {//解析信息并调用onFileInfo
+            CHEN_LOG(DEBUG,"file parse...");
             codec.parse(conn,buf);
         }
     }
@@ -69,7 +78,7 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
                             const syncInfoPtr &message)
 {
     int id = message->id();
-    string filename = message->filename();
+    std::string filename = message->filename();
     switch(id)
     {
     case 1:
@@ -94,8 +103,12 @@ void SyncServer::onFileInfo(const muduo::net::TcpConnectionPtr &conn,
 {
     Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
     info_ptr->isRecving = true;
-    info_ptr->filename = std::move(message->filename());
+    std::string filename = info_ptr->filename = message->filename();
     info_ptr->totalSize = info_ptr->remainSize = message->size();
+    //如果同名文件存在则删除
+    if(access(filename.c_str(),F_OK) == 0)
+        if(::remove(filename.c_str()) < 0)
+            CHEN_LOG(ERROR,"remove error");
     recvFile(info_ptr,conn->inputBuffer());
 }
 /**
@@ -110,6 +123,7 @@ void SyncServer::recvFile(Info_ConnPtr &info_ptr, muduo::net::Buffer *inputBuffe
     {//文件接受完
         sysutil::fileRecvfromBuf(info_ptr->filename.c_str(),
                                  inputBuffer->peek(),info_ptr->remainSize);
+        inputBuffer->retrieve(info_ptr->remainSize);
         info_ptr->isRecving = false;
         info_ptr->remainSize = 0;
         info_ptr->totalSize = 0;
@@ -119,6 +133,7 @@ void SyncServer::recvFile(Info_ConnPtr &info_ptr, muduo::net::Buffer *inputBuffe
     {
         sysutil::fileRecvfromBuf(info_ptr->filename.c_str(),
                                  inputBuffer->peek(),len);
+        inputBuffer->retrieve(len);
         info_ptr->remainSize -= len;
     }
 }

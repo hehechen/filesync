@@ -8,7 +8,6 @@
 #include <muduo/net/TcpConnection.h>
 #include <muduo/net/TcpServer.h>
 #include "protobuf/filesync.pb.h"
-using namespace std;
 
 //相应protobuf消息的回调函数
 typedef std::shared_ptr<filesync::syncInfo> syncInfoPtr;
@@ -30,13 +29,13 @@ private:
         bool isRecving = false; //是否正在接收文件
         int totalSize = 0;
         int remainSize = 0;
-        string filename;
+        std::string filename;
     };
     typedef std::shared_ptr<Info_Conn> Info_ConnPtr;
     //存放此ip对应的TcpConnection，这样可以方便查看此ip连接的次数，以决定此conn的类型
     //在此ip掉线时，也能方便关掉所有的conn
-    typedef vector<muduo::net::TcpConnectionPtr> Con_Vec;
-    unordered_map<muduo::string,Con_Vec>   ipMaps;
+    typedef std::vector<muduo::net::TcpConnectionPtr> Con_Vec;
+    std::unordered_map<muduo::string,Con_Vec>   ipMaps;
 
     Codec codec;
     muduo::net::InetAddress serverAddr;

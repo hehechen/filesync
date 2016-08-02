@@ -27,6 +27,9 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* sendfile_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   sendfile_reflection_ = NULL;
+const ::google::protobuf::Descriptor* isControl_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  isControl_reflection_ = NULL;
 const ::google::protobuf::Descriptor* fileInfo_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   fileInfo_reflection_ = NULL;
@@ -75,7 +78,22 @@ void protobuf_AssignDesc_filesync_2eproto() {
       sizeof(sendfile),
       GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(sendfile, _internal_metadata_),
       -1);
-  fileInfo_descriptor_ = file->message_type(2);
+  isControl_descriptor_ = file->message_type(2);
+  static const int isControl_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(isControl, id_),
+  };
+  isControl_reflection_ =
+    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
+      isControl_descriptor_,
+      isControl::default_instance_,
+      isControl_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(isControl, _has_bits_[0]),
+      -1,
+      -1,
+      sizeof(isControl),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(isControl, _internal_metadata_),
+      -1);
+  fileInfo_descriptor_ = file->message_type(3);
   static const int fileInfo_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(fileInfo, size_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(fileInfo, filename_),
@@ -109,6 +127,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
       sendfile_descriptor_, &sendfile::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+      isControl_descriptor_, &isControl::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
       fileInfo_descriptor_, &fileInfo::default_instance());
 }
 
@@ -119,6 +139,8 @@ void protobuf_ShutdownFile_filesync_2eproto() {
   delete syncInfo_reflection_;
   delete sendfile::default_instance_;
   delete sendfile_reflection_;
+  delete isControl::default_instance_;
+  delete isControl_reflection_;
   delete fileInfo::default_instance_;
   delete fileInfo_reflection_;
 }
@@ -134,15 +156,18 @@ void protobuf_AddDesc_filesync_2eproto() {
     "\n\016filesync.proto\022\010filesync\"C\n\010syncInfo\022\n"
     "\n\002id\030\001 \002(\005\022\020\n\010filename\030\002 \002(\t\022\014\n\004size\030\003 \001"
     "(\005\022\013\n\003MD5\030\004 \001(\t\"(\n\010sendfile\022\n\n\002id\030\001 \002(\005\022"
-    "\020\n\010filename\030\002 \002(\t\"*\n\010fileInfo\022\014\n\004size\030\001 "
-    "\002(\005\022\020\n\010filename\030\002 \002(\t", 181);
+    "\020\n\010filename\030\002 \002(\t\"\027\n\tisControl\022\n\n\002id\030\001 \002"
+    "(\005\"*\n\010fileInfo\022\014\n\004size\030\001 \002(\005\022\020\n\010filename"
+    "\030\002 \002(\t", 206);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "filesync.proto", &protobuf_RegisterTypes);
   syncInfo::default_instance_ = new syncInfo();
   sendfile::default_instance_ = new sendfile();
+  isControl::default_instance_ = new isControl();
   fileInfo::default_instance_ = new fileInfo();
   syncInfo::default_instance_->InitAsDefaultInstance();
   sendfile::default_instance_->InitAsDefaultInstance();
+  isControl::default_instance_->InitAsDefaultInstance();
   fileInfo::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_filesync_2eproto);
 }
@@ -1154,6 +1179,277 @@ void sendfile::clear_filename() {
   }
   filename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), filename);
   // @@protoc_insertion_point(field_set_allocated:filesync.sendfile.filename)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int isControl::kIdFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+isControl::isControl()
+  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:filesync.isControl)
+}
+
+void isControl::InitAsDefaultInstance() {
+}
+
+isControl::isControl(const isControl& from)
+  : ::google::protobuf::Message(),
+    _internal_metadata_(NULL) {
+  SharedCtor();
+  MergeFrom(from);
+  // @@protoc_insertion_point(copy_constructor:filesync.isControl)
+}
+
+void isControl::SharedCtor() {
+  _cached_size_ = 0;
+  id_ = 0;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+isControl::~isControl() {
+  // @@protoc_insertion_point(destructor:filesync.isControl)
+  SharedDtor();
+}
+
+void isControl::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void isControl::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* isControl::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return isControl_descriptor_;
+}
+
+const isControl& isControl::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_filesync_2eproto();
+  return *default_instance_;
+}
+
+isControl* isControl::default_instance_ = NULL;
+
+isControl* isControl::New(::google::protobuf::Arena* arena) const {
+  isControl* n = new isControl;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void isControl::Clear() {
+// @@protoc_insertion_point(message_clear_start:filesync.isControl)
+  id_ = 0;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  if (_internal_metadata_.have_unknown_fields()) {
+    mutable_unknown_fields()->Clear();
+  }
+}
+
+bool isControl::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:filesync.isControl)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoff(127);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // required int32 id = 1;
+      case 1: {
+        if (tag == 8) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &id_)));
+          set_has_id();
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectAtEnd()) goto success;
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:filesync.isControl)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:filesync.isControl)
+  return false;
+#undef DO_
+}
+
+void isControl::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:filesync.isControl)
+  // required int32 id = 1;
+  if (has_id()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->id(), output);
+  }
+
+  if (_internal_metadata_.have_unknown_fields()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+  // @@protoc_insertion_point(serialize_end:filesync.isControl)
+}
+
+::google::protobuf::uint8* isControl::InternalSerializeWithCachedSizesToArray(
+    bool deterministic, ::google::protobuf::uint8* target) const {
+  // @@protoc_insertion_point(serialize_to_array_start:filesync.isControl)
+  // required int32 id = 1;
+  if (has_id()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->id(), target);
+  }
+
+  if (_internal_metadata_.have_unknown_fields()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:filesync.isControl)
+  return target;
+}
+
+int isControl::ByteSize() const {
+// @@protoc_insertion_point(message_byte_size_start:filesync.isControl)
+  int total_size = 0;
+
+  // required int32 id = 1;
+  if (has_id()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->id());
+  }
+  if (_internal_metadata_.have_unknown_fields()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void isControl::MergeFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:filesync.isControl)
+  if (GOOGLE_PREDICT_FALSE(&from == this)) {
+    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
+  }
+  const isControl* source = 
+      ::google::protobuf::internal::DynamicCastToGenerated<const isControl>(
+          &from);
+  if (source == NULL) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:filesync.isControl)
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:filesync.isControl)
+    MergeFrom(*source);
+  }
+}
+
+void isControl::MergeFrom(const isControl& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:filesync.isControl)
+  if (GOOGLE_PREDICT_FALSE(&from == this)) {
+    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
+  }
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_id()) {
+      set_id(from.id());
+    }
+  }
+  if (from._internal_metadata_.have_unknown_fields()) {
+    mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+  }
+}
+
+void isControl::CopyFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:filesync.isControl)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void isControl::CopyFrom(const isControl& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:filesync.isControl)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool isControl::IsInitialized() const {
+  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
+
+  return true;
+}
+
+void isControl::Swap(isControl* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void isControl::InternalSwap(isControl* other) {
+  std::swap(id_, other->id_);
+  std::swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::google::protobuf::Metadata isControl::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = isControl_descriptor_;
+  metadata.reflection = isControl_reflection_;
+  return metadata;
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// isControl
+
+// required int32 id = 1;
+bool isControl::has_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void isControl::set_has_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void isControl::clear_has_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void isControl::clear_id() {
+  id_ = 0;
+  clear_has_id();
+}
+ ::google::protobuf::int32 isControl::id() const {
+  // @@protoc_insertion_point(field_get:filesync.isControl.id)
+  return id_;
+}
+ void isControl::set_id(::google::protobuf::int32 value) {
+  set_has_id();
+  id_ = value;
+  // @@protoc_insertion_point(field_set:filesync.isControl.id)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

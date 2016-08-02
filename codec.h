@@ -71,7 +71,7 @@ public:
         callbackMap[T::descriptor()] = pd;
     }
     //将要发送的信息打包，打包方式如上的注释
-    std::string enCode(const google::protobuf::Message& message);    
+    static std::string enCode(const google::protobuf::Message& message);
     //解析数据并执行相应的回调函数
     void parse(const muduo::net::TcpConnectionPtr &conn, muduo::net::Buffer *inputBuffer);
 private:
