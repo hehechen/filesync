@@ -10,16 +10,17 @@
 #include "protobuf/filesync.pb.h"
 
 //相应protobuf消息的回调函数
-typedef std::shared_ptr<filesync::syncInfo> syncInfoPtr;
-typedef std::shared_ptr<filesync::fileInfo> fileInfoPtr;
+typedef std::shared_ptr<filesync::SyncInfo> syncInfoPtr;
+typedef std::shared_ptr<filesync::FileInfo> fileInfoPtr;
 
 class SyncServer
 {
 public:
-    SyncServer(muduo::net::EventLoop *loop, int port);
+    SyncServer(const char *root,muduo::net::EventLoop *loop, int port);
     void start()    {   server_.start();    }
 private:
     static const int KHeaderLen = 4;    //包的长度信息为4字节
+
     //TcpConnectionPtr的context存放着此conn的类型
     enum ConType {  CONTROL=1,DATA };
     //TcpConnection的context存放的结构体
@@ -29,9 +30,12 @@ private:
         bool isRecving = false; //是否正在接收文件
         int totalSize = 0;
         int remainSize = 0;
-        std::string filename;
+        std::string filename;   //本地文件名包含路径
     };
     typedef std::shared_ptr<Info_Conn> Info_ConnPtr;
+
+    std::string rootDir;    //要同步的文件夹
+
     //存放此ip对应的TcpConnection，这样可以方便查看此ip连接的次数，以决定此conn的类型
     //在此ip掉线时，也能方便关掉所有的conn
     typedef std::vector<muduo::net::TcpConnectionPtr> Con_Vec;

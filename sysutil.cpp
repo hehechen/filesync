@@ -219,7 +219,7 @@ void fileRecvfromBuf(const char *filename,const char *buf,int size)
     int fd = open(filename, O_CREAT | O_WRONLY, 0666);
     if (fd == -1)
     {
-        CHEN_LOG(ERROR,"Could not create file.");
+        CHEN_LOG(ERROR,"Could not create file %s",filename);
         return;
     }
     lseek(fd,0,SEEK_END);

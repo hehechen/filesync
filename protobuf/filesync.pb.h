@@ -36,21 +36,21 @@ void protobuf_AddDesc_filesync_2eproto();
 void protobuf_AssignDesc_filesync_2eproto();
 void protobuf_ShutdownFile_filesync_2eproto();
 
-class fileInfo;
-class isControl;
-class sendfile;
-class syncInfo;
+class FileInfo;
+class IsControl;
+class SendFile;
+class SyncInfo;
 
 // ===================================================================
 
-class syncInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:filesync.syncInfo) */ {
+class SyncInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:filesync.SyncInfo) */ {
  public:
-  syncInfo();
-  virtual ~syncInfo();
+  SyncInfo();
+  virtual ~SyncInfo();
 
-  syncInfo(const syncInfo& from);
+  SyncInfo(const SyncInfo& from);
 
-  inline syncInfo& operator=(const syncInfo& from) {
+  inline SyncInfo& operator=(const SyncInfo& from) {
     CopyFrom(from);
     return *this;
   }
@@ -64,19 +64,19 @@ class syncInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const syncInfo& default_instance();
+  static const SyncInfo& default_instance();
 
-  void Swap(syncInfo* other);
+  void Swap(SyncInfo* other);
 
   // implements Message ----------------------------------------------
 
-  inline syncInfo* New() const { return New(NULL); }
+  inline SyncInfo* New() const { return New(NULL); }
 
-  syncInfo* New(::google::protobuf::Arena* arena) const;
+  SyncInfo* New(::google::protobuf::Arena* arena) const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const syncInfo& from);
-  void MergeFrom(const syncInfo& from);
+  void CopyFrom(const SyncInfo& from);
+  void MergeFrom(const SyncInfo& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -95,7 +95,7 @@ class syncInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const;
-  void InternalSwap(syncInfo* other);
+  void InternalSwap(SyncInfo* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return _internal_metadata_.arena();
@@ -130,17 +130,29 @@ class syncInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::std::string* release_filename();
   void set_allocated_filename(::std::string* filename);
 
-  // optional int32 size = 3;
+  // optional string newFilename = 3;
+  bool has_newfilename() const;
+  void clear_newfilename();
+  static const int kNewFilenameFieldNumber = 3;
+  const ::std::string& newfilename() const;
+  void set_newfilename(const ::std::string& value);
+  void set_newfilename(const char* value);
+  void set_newfilename(const char* value, size_t size);
+  ::std::string* mutable_newfilename();
+  ::std::string* release_newfilename();
+  void set_allocated_newfilename(::std::string* newfilename);
+
+  // optional int32 size = 4;
   bool has_size() const;
   void clear_size();
-  static const int kSizeFieldNumber = 3;
+  static const int kSizeFieldNumber = 4;
   ::google::protobuf::int32 size() const;
   void set_size(::google::protobuf::int32 value);
 
-  // optional string MD5 = 4;
+  // optional string MD5 = 5;
   bool has_md5() const;
   void clear_md5();
-  static const int kMD5FieldNumber = 4;
+  static const int kMD5FieldNumber = 5;
   const ::std::string& md5() const;
   void set_md5(const ::std::string& value);
   void set_md5(const char* value);
@@ -149,12 +161,14 @@ class syncInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::std::string* release_md5();
   void set_allocated_md5(::std::string* md5);
 
-  // @@protoc_insertion_point(class_scope:filesync.syncInfo)
+  // @@protoc_insertion_point(class_scope:filesync.SyncInfo)
  private:
   inline void set_has_id();
   inline void clear_has_id();
   inline void set_has_filename();
   inline void clear_has_filename();
+  inline void set_has_newfilename();
+  inline void clear_has_newfilename();
   inline void set_has_size();
   inline void clear_has_size();
   inline void set_has_md5();
@@ -169,24 +183,25 @@ class syncInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::google::protobuf::internal::ArenaStringPtr filename_;
   ::google::protobuf::int32 id_;
   ::google::protobuf::int32 size_;
+  ::google::protobuf::internal::ArenaStringPtr newfilename_;
   ::google::protobuf::internal::ArenaStringPtr md5_;
   friend void  protobuf_AddDesc_filesync_2eproto();
   friend void protobuf_AssignDesc_filesync_2eproto();
   friend void protobuf_ShutdownFile_filesync_2eproto();
 
   void InitAsDefaultInstance();
-  static syncInfo* default_instance_;
+  static SyncInfo* default_instance_;
 };
 // -------------------------------------------------------------------
 
-class sendfile : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:filesync.sendfile) */ {
+class SendFile : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:filesync.SendFile) */ {
  public:
-  sendfile();
-  virtual ~sendfile();
+  SendFile();
+  virtual ~SendFile();
 
-  sendfile(const sendfile& from);
+  SendFile(const SendFile& from);
 
-  inline sendfile& operator=(const sendfile& from) {
+  inline SendFile& operator=(const SendFile& from) {
     CopyFrom(from);
     return *this;
   }
@@ -200,19 +215,19 @@ class sendfile : public ::google::protobuf::Message /* @@protoc_insertion_point(
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const sendfile& default_instance();
+  static const SendFile& default_instance();
 
-  void Swap(sendfile* other);
+  void Swap(SendFile* other);
 
   // implements Message ----------------------------------------------
 
-  inline sendfile* New() const { return New(NULL); }
+  inline SendFile* New() const { return New(NULL); }
 
-  sendfile* New(::google::protobuf::Arena* arena) const;
+  SendFile* New(::google::protobuf::Arena* arena) const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const sendfile& from);
-  void MergeFrom(const sendfile& from);
+  void CopyFrom(const SendFile& from);
+  void MergeFrom(const SendFile& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -231,7 +246,7 @@ class sendfile : public ::google::protobuf::Message /* @@protoc_insertion_point(
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const;
-  void InternalSwap(sendfile* other);
+  void InternalSwap(SendFile* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return _internal_metadata_.arena();
@@ -266,7 +281,7 @@ class sendfile : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::std::string* release_filename();
   void set_allocated_filename(::std::string* filename);
 
-  // @@protoc_insertion_point(class_scope:filesync.sendfile)
+  // @@protoc_insertion_point(class_scope:filesync.SendFile)
  private:
   inline void set_has_id();
   inline void clear_has_id();
@@ -286,18 +301,18 @@ class sendfile : public ::google::protobuf::Message /* @@protoc_insertion_point(
   friend void protobuf_ShutdownFile_filesync_2eproto();
 
   void InitAsDefaultInstance();
-  static sendfile* default_instance_;
+  static SendFile* default_instance_;
 };
 // -------------------------------------------------------------------
 
-class isControl : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:filesync.isControl) */ {
+class IsControl : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:filesync.IsControl) */ {
  public:
-  isControl();
-  virtual ~isControl();
+  IsControl();
+  virtual ~IsControl();
 
-  isControl(const isControl& from);
+  IsControl(const IsControl& from);
 
-  inline isControl& operator=(const isControl& from) {
+  inline IsControl& operator=(const IsControl& from) {
     CopyFrom(from);
     return *this;
   }
@@ -311,19 +326,19 @@ class isControl : public ::google::protobuf::Message /* @@protoc_insertion_point
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const isControl& default_instance();
+  static const IsControl& default_instance();
 
-  void Swap(isControl* other);
+  void Swap(IsControl* other);
 
   // implements Message ----------------------------------------------
 
-  inline isControl* New() const { return New(NULL); }
+  inline IsControl* New() const { return New(NULL); }
 
-  isControl* New(::google::protobuf::Arena* arena) const;
+  IsControl* New(::google::protobuf::Arena* arena) const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const isControl& from);
-  void MergeFrom(const isControl& from);
+  void CopyFrom(const IsControl& from);
+  void MergeFrom(const IsControl& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -342,7 +357,7 @@ class isControl : public ::google::protobuf::Message /* @@protoc_insertion_point
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const;
-  void InternalSwap(isControl* other);
+  void InternalSwap(IsControl* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return _internal_metadata_.arena();
@@ -365,7 +380,7 @@ class isControl : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::google::protobuf::int32 id() const;
   void set_id(::google::protobuf::int32 value);
 
-  // @@protoc_insertion_point(class_scope:filesync.isControl)
+  // @@protoc_insertion_point(class_scope:filesync.IsControl)
  private:
   inline void set_has_id();
   inline void clear_has_id();
@@ -379,18 +394,18 @@ class isControl : public ::google::protobuf::Message /* @@protoc_insertion_point
   friend void protobuf_ShutdownFile_filesync_2eproto();
 
   void InitAsDefaultInstance();
-  static isControl* default_instance_;
+  static IsControl* default_instance_;
 };
 // -------------------------------------------------------------------
 
-class fileInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:filesync.fileInfo) */ {
+class FileInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:filesync.FileInfo) */ {
  public:
-  fileInfo();
-  virtual ~fileInfo();
+  FileInfo();
+  virtual ~FileInfo();
 
-  fileInfo(const fileInfo& from);
+  FileInfo(const FileInfo& from);
 
-  inline fileInfo& operator=(const fileInfo& from) {
+  inline FileInfo& operator=(const FileInfo& from) {
     CopyFrom(from);
     return *this;
   }
@@ -404,19 +419,19 @@ class fileInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const fileInfo& default_instance();
+  static const FileInfo& default_instance();
 
-  void Swap(fileInfo* other);
+  void Swap(FileInfo* other);
 
   // implements Message ----------------------------------------------
 
-  inline fileInfo* New() const { return New(NULL); }
+  inline FileInfo* New() const { return New(NULL); }
 
-  fileInfo* New(::google::protobuf::Arena* arena) const;
+  FileInfo* New(::google::protobuf::Arena* arena) const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const fileInfo& from);
-  void MergeFrom(const fileInfo& from);
+  void CopyFrom(const FileInfo& from);
+  void MergeFrom(const FileInfo& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -435,7 +450,7 @@ class fileInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const;
-  void InternalSwap(fileInfo* other);
+  void InternalSwap(FileInfo* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return _internal_metadata_.arena();
@@ -470,7 +485,7 @@ class fileInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::std::string* release_filename();
   void set_allocated_filename(::std::string* filename);
 
-  // @@protoc_insertion_point(class_scope:filesync.fileInfo)
+  // @@protoc_insertion_point(class_scope:filesync.FileInfo)
  private:
   inline void set_has_size();
   inline void clear_has_size();
@@ -490,7 +505,7 @@ class fileInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(
   friend void protobuf_ShutdownFile_filesync_2eproto();
 
   void InitAsDefaultInstance();
-  static fileInfo* default_instance_;
+  static FileInfo* default_instance_;
 };
 // ===================================================================
 
@@ -498,354 +513,408 @@ class fileInfo : public ::google::protobuf::Message /* @@protoc_insertion_point(
 // ===================================================================
 
 #if !PROTOBUF_INLINE_NOT_IN_HEADERS
-// syncInfo
+// SyncInfo
 
 // required int32 id = 1;
-inline bool syncInfo::has_id() const {
+inline bool SyncInfo::has_id() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void syncInfo::set_has_id() {
+inline void SyncInfo::set_has_id() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void syncInfo::clear_has_id() {
+inline void SyncInfo::clear_has_id() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void syncInfo::clear_id() {
+inline void SyncInfo::clear_id() {
   id_ = 0;
   clear_has_id();
 }
-inline ::google::protobuf::int32 syncInfo::id() const {
-  // @@protoc_insertion_point(field_get:filesync.syncInfo.id)
+inline ::google::protobuf::int32 SyncInfo::id() const {
+  // @@protoc_insertion_point(field_get:filesync.SyncInfo.id)
   return id_;
 }
-inline void syncInfo::set_id(::google::protobuf::int32 value) {
+inline void SyncInfo::set_id(::google::protobuf::int32 value) {
   set_has_id();
   id_ = value;
-  // @@protoc_insertion_point(field_set:filesync.syncInfo.id)
+  // @@protoc_insertion_point(field_set:filesync.SyncInfo.id)
 }
 
 // required string filename = 2;
-inline bool syncInfo::has_filename() const {
+inline bool SyncInfo::has_filename() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void syncInfo::set_has_filename() {
+inline void SyncInfo::set_has_filename() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void syncInfo::clear_has_filename() {
+inline void SyncInfo::clear_has_filename() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void syncInfo::clear_filename() {
+inline void SyncInfo::clear_filename() {
   filename_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   clear_has_filename();
 }
-inline const ::std::string& syncInfo::filename() const {
-  // @@protoc_insertion_point(field_get:filesync.syncInfo.filename)
+inline const ::std::string& SyncInfo::filename() const {
+  // @@protoc_insertion_point(field_get:filesync.SyncInfo.filename)
   return filename_.GetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void syncInfo::set_filename(const ::std::string& value) {
+inline void SyncInfo::set_filename(const ::std::string& value) {
   set_has_filename();
   filename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:filesync.syncInfo.filename)
+  // @@protoc_insertion_point(field_set:filesync.SyncInfo.filename)
 }
-inline void syncInfo::set_filename(const char* value) {
+inline void SyncInfo::set_filename(const char* value) {
   set_has_filename();
   filename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:filesync.syncInfo.filename)
+  // @@protoc_insertion_point(field_set_char:filesync.SyncInfo.filename)
 }
-inline void syncInfo::set_filename(const char* value, size_t size) {
+inline void SyncInfo::set_filename(const char* value, size_t size) {
   set_has_filename();
   filename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:filesync.syncInfo.filename)
+  // @@protoc_insertion_point(field_set_pointer:filesync.SyncInfo.filename)
 }
-inline ::std::string* syncInfo::mutable_filename() {
+inline ::std::string* SyncInfo::mutable_filename() {
   set_has_filename();
-  // @@protoc_insertion_point(field_mutable:filesync.syncInfo.filename)
+  // @@protoc_insertion_point(field_mutable:filesync.SyncInfo.filename)
   return filename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* syncInfo::release_filename() {
-  // @@protoc_insertion_point(field_release:filesync.syncInfo.filename)
+inline ::std::string* SyncInfo::release_filename() {
+  // @@protoc_insertion_point(field_release:filesync.SyncInfo.filename)
   clear_has_filename();
   return filename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void syncInfo::set_allocated_filename(::std::string* filename) {
+inline void SyncInfo::set_allocated_filename(::std::string* filename) {
   if (filename != NULL) {
     set_has_filename();
   } else {
     clear_has_filename();
   }
   filename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), filename);
-  // @@protoc_insertion_point(field_set_allocated:filesync.syncInfo.filename)
+  // @@protoc_insertion_point(field_set_allocated:filesync.SyncInfo.filename)
 }
 
-// optional int32 size = 3;
-inline bool syncInfo::has_size() const {
+// optional string newFilename = 3;
+inline bool SyncInfo::has_newfilename() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void syncInfo::set_has_size() {
+inline void SyncInfo::set_has_newfilename() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void syncInfo::clear_has_size() {
+inline void SyncInfo::clear_has_newfilename() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void syncInfo::clear_size() {
+inline void SyncInfo::clear_newfilename() {
+  newfilename_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_newfilename();
+}
+inline const ::std::string& SyncInfo::newfilename() const {
+  // @@protoc_insertion_point(field_get:filesync.SyncInfo.newFilename)
+  return newfilename_.GetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void SyncInfo::set_newfilename(const ::std::string& value) {
+  set_has_newfilename();
+  newfilename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:filesync.SyncInfo.newFilename)
+}
+inline void SyncInfo::set_newfilename(const char* value) {
+  set_has_newfilename();
+  newfilename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:filesync.SyncInfo.newFilename)
+}
+inline void SyncInfo::set_newfilename(const char* value, size_t size) {
+  set_has_newfilename();
+  newfilename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:filesync.SyncInfo.newFilename)
+}
+inline ::std::string* SyncInfo::mutable_newfilename() {
+  set_has_newfilename();
+  // @@protoc_insertion_point(field_mutable:filesync.SyncInfo.newFilename)
+  return newfilename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* SyncInfo::release_newfilename() {
+  // @@protoc_insertion_point(field_release:filesync.SyncInfo.newFilename)
+  clear_has_newfilename();
+  return newfilename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void SyncInfo::set_allocated_newfilename(::std::string* newfilename) {
+  if (newfilename != NULL) {
+    set_has_newfilename();
+  } else {
+    clear_has_newfilename();
+  }
+  newfilename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), newfilename);
+  // @@protoc_insertion_point(field_set_allocated:filesync.SyncInfo.newFilename)
+}
+
+// optional int32 size = 4;
+inline bool SyncInfo::has_size() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void SyncInfo::set_has_size() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void SyncInfo::clear_has_size() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void SyncInfo::clear_size() {
   size_ = 0;
   clear_has_size();
 }
-inline ::google::protobuf::int32 syncInfo::size() const {
-  // @@protoc_insertion_point(field_get:filesync.syncInfo.size)
+inline ::google::protobuf::int32 SyncInfo::size() const {
+  // @@protoc_insertion_point(field_get:filesync.SyncInfo.size)
   return size_;
 }
-inline void syncInfo::set_size(::google::protobuf::int32 value) {
+inline void SyncInfo::set_size(::google::protobuf::int32 value) {
   set_has_size();
   size_ = value;
-  // @@protoc_insertion_point(field_set:filesync.syncInfo.size)
+  // @@protoc_insertion_point(field_set:filesync.SyncInfo.size)
 }
 
-// optional string MD5 = 4;
-inline bool syncInfo::has_md5() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+// optional string MD5 = 5;
+inline bool SyncInfo::has_md5() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void syncInfo::set_has_md5() {
-  _has_bits_[0] |= 0x00000008u;
+inline void SyncInfo::set_has_md5() {
+  _has_bits_[0] |= 0x00000010u;
 }
-inline void syncInfo::clear_has_md5() {
-  _has_bits_[0] &= ~0x00000008u;
+inline void SyncInfo::clear_has_md5() {
+  _has_bits_[0] &= ~0x00000010u;
 }
-inline void syncInfo::clear_md5() {
+inline void SyncInfo::clear_md5() {
   md5_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   clear_has_md5();
 }
-inline const ::std::string& syncInfo::md5() const {
-  // @@protoc_insertion_point(field_get:filesync.syncInfo.MD5)
+inline const ::std::string& SyncInfo::md5() const {
+  // @@protoc_insertion_point(field_get:filesync.SyncInfo.MD5)
   return md5_.GetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void syncInfo::set_md5(const ::std::string& value) {
+inline void SyncInfo::set_md5(const ::std::string& value) {
   set_has_md5();
   md5_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:filesync.syncInfo.MD5)
+  // @@protoc_insertion_point(field_set:filesync.SyncInfo.MD5)
 }
-inline void syncInfo::set_md5(const char* value) {
+inline void SyncInfo::set_md5(const char* value) {
   set_has_md5();
   md5_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:filesync.syncInfo.MD5)
+  // @@protoc_insertion_point(field_set_char:filesync.SyncInfo.MD5)
 }
-inline void syncInfo::set_md5(const char* value, size_t size) {
+inline void SyncInfo::set_md5(const char* value, size_t size) {
   set_has_md5();
   md5_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:filesync.syncInfo.MD5)
+  // @@protoc_insertion_point(field_set_pointer:filesync.SyncInfo.MD5)
 }
-inline ::std::string* syncInfo::mutable_md5() {
+inline ::std::string* SyncInfo::mutable_md5() {
   set_has_md5();
-  // @@protoc_insertion_point(field_mutable:filesync.syncInfo.MD5)
+  // @@protoc_insertion_point(field_mutable:filesync.SyncInfo.MD5)
   return md5_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* syncInfo::release_md5() {
-  // @@protoc_insertion_point(field_release:filesync.syncInfo.MD5)
+inline ::std::string* SyncInfo::release_md5() {
+  // @@protoc_insertion_point(field_release:filesync.SyncInfo.MD5)
   clear_has_md5();
   return md5_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void syncInfo::set_allocated_md5(::std::string* md5) {
+inline void SyncInfo::set_allocated_md5(::std::string* md5) {
   if (md5 != NULL) {
     set_has_md5();
   } else {
     clear_has_md5();
   }
   md5_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), md5);
-  // @@protoc_insertion_point(field_set_allocated:filesync.syncInfo.MD5)
+  // @@protoc_insertion_point(field_set_allocated:filesync.SyncInfo.MD5)
 }
 
 // -------------------------------------------------------------------
 
-// sendfile
+// SendFile
 
 // required int32 id = 1;
-inline bool sendfile::has_id() const {
+inline bool SendFile::has_id() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void sendfile::set_has_id() {
+inline void SendFile::set_has_id() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void sendfile::clear_has_id() {
+inline void SendFile::clear_has_id() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void sendfile::clear_id() {
+inline void SendFile::clear_id() {
   id_ = 0;
   clear_has_id();
 }
-inline ::google::protobuf::int32 sendfile::id() const {
-  // @@protoc_insertion_point(field_get:filesync.sendfile.id)
+inline ::google::protobuf::int32 SendFile::id() const {
+  // @@protoc_insertion_point(field_get:filesync.SendFile.id)
   return id_;
 }
-inline void sendfile::set_id(::google::protobuf::int32 value) {
+inline void SendFile::set_id(::google::protobuf::int32 value) {
   set_has_id();
   id_ = value;
-  // @@protoc_insertion_point(field_set:filesync.sendfile.id)
+  // @@protoc_insertion_point(field_set:filesync.SendFile.id)
 }
 
 // required string filename = 2;
-inline bool sendfile::has_filename() const {
+inline bool SendFile::has_filename() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void sendfile::set_has_filename() {
+inline void SendFile::set_has_filename() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void sendfile::clear_has_filename() {
+inline void SendFile::clear_has_filename() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void sendfile::clear_filename() {
+inline void SendFile::clear_filename() {
   filename_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   clear_has_filename();
 }
-inline const ::std::string& sendfile::filename() const {
-  // @@protoc_insertion_point(field_get:filesync.sendfile.filename)
+inline const ::std::string& SendFile::filename() const {
+  // @@protoc_insertion_point(field_get:filesync.SendFile.filename)
   return filename_.GetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void sendfile::set_filename(const ::std::string& value) {
+inline void SendFile::set_filename(const ::std::string& value) {
   set_has_filename();
   filename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:filesync.sendfile.filename)
+  // @@protoc_insertion_point(field_set:filesync.SendFile.filename)
 }
-inline void sendfile::set_filename(const char* value) {
+inline void SendFile::set_filename(const char* value) {
   set_has_filename();
   filename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:filesync.sendfile.filename)
+  // @@protoc_insertion_point(field_set_char:filesync.SendFile.filename)
 }
-inline void sendfile::set_filename(const char* value, size_t size) {
+inline void SendFile::set_filename(const char* value, size_t size) {
   set_has_filename();
   filename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:filesync.sendfile.filename)
+  // @@protoc_insertion_point(field_set_pointer:filesync.SendFile.filename)
 }
-inline ::std::string* sendfile::mutable_filename() {
+inline ::std::string* SendFile::mutable_filename() {
   set_has_filename();
-  // @@protoc_insertion_point(field_mutable:filesync.sendfile.filename)
+  // @@protoc_insertion_point(field_mutable:filesync.SendFile.filename)
   return filename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* sendfile::release_filename() {
-  // @@protoc_insertion_point(field_release:filesync.sendfile.filename)
+inline ::std::string* SendFile::release_filename() {
+  // @@protoc_insertion_point(field_release:filesync.SendFile.filename)
   clear_has_filename();
   return filename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void sendfile::set_allocated_filename(::std::string* filename) {
+inline void SendFile::set_allocated_filename(::std::string* filename) {
   if (filename != NULL) {
     set_has_filename();
   } else {
     clear_has_filename();
   }
   filename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), filename);
-  // @@protoc_insertion_point(field_set_allocated:filesync.sendfile.filename)
+  // @@protoc_insertion_point(field_set_allocated:filesync.SendFile.filename)
 }
 
 // -------------------------------------------------------------------
 
-// isControl
+// IsControl
 
 // required int32 id = 1;
-inline bool isControl::has_id() const {
+inline bool IsControl::has_id() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void isControl::set_has_id() {
+inline void IsControl::set_has_id() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void isControl::clear_has_id() {
+inline void IsControl::clear_has_id() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void isControl::clear_id() {
+inline void IsControl::clear_id() {
   id_ = 0;
   clear_has_id();
 }
-inline ::google::protobuf::int32 isControl::id() const {
-  // @@protoc_insertion_point(field_get:filesync.isControl.id)
+inline ::google::protobuf::int32 IsControl::id() const {
+  // @@protoc_insertion_point(field_get:filesync.IsControl.id)
   return id_;
 }
-inline void isControl::set_id(::google::protobuf::int32 value) {
+inline void IsControl::set_id(::google::protobuf::int32 value) {
   set_has_id();
   id_ = value;
-  // @@protoc_insertion_point(field_set:filesync.isControl.id)
+  // @@protoc_insertion_point(field_set:filesync.IsControl.id)
 }
 
 // -------------------------------------------------------------------
 
-// fileInfo
+// FileInfo
 
 // required int32 size = 1;
-inline bool fileInfo::has_size() const {
+inline bool FileInfo::has_size() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void fileInfo::set_has_size() {
+inline void FileInfo::set_has_size() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void fileInfo::clear_has_size() {
+inline void FileInfo::clear_has_size() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void fileInfo::clear_size() {
+inline void FileInfo::clear_size() {
   size_ = 0;
   clear_has_size();
 }
-inline ::google::protobuf::int32 fileInfo::size() const {
-  // @@protoc_insertion_point(field_get:filesync.fileInfo.size)
+inline ::google::protobuf::int32 FileInfo::size() const {
+  // @@protoc_insertion_point(field_get:filesync.FileInfo.size)
   return size_;
 }
-inline void fileInfo::set_size(::google::protobuf::int32 value) {
+inline void FileInfo::set_size(::google::protobuf::int32 value) {
   set_has_size();
   size_ = value;
-  // @@protoc_insertion_point(field_set:filesync.fileInfo.size)
+  // @@protoc_insertion_point(field_set:filesync.FileInfo.size)
 }
 
 // required string filename = 2;
-inline bool fileInfo::has_filename() const {
+inline bool FileInfo::has_filename() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void fileInfo::set_has_filename() {
+inline void FileInfo::set_has_filename() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void fileInfo::clear_has_filename() {
+inline void FileInfo::clear_has_filename() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void fileInfo::clear_filename() {
+inline void FileInfo::clear_filename() {
   filename_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   clear_has_filename();
 }
-inline const ::std::string& fileInfo::filename() const {
-  // @@protoc_insertion_point(field_get:filesync.fileInfo.filename)
+inline const ::std::string& FileInfo::filename() const {
+  // @@protoc_insertion_point(field_get:filesync.FileInfo.filename)
   return filename_.GetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void fileInfo::set_filename(const ::std::string& value) {
+inline void FileInfo::set_filename(const ::std::string& value) {
   set_has_filename();
   filename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:filesync.fileInfo.filename)
+  // @@protoc_insertion_point(field_set:filesync.FileInfo.filename)
 }
-inline void fileInfo::set_filename(const char* value) {
+inline void FileInfo::set_filename(const char* value) {
   set_has_filename();
   filename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:filesync.fileInfo.filename)
+  // @@protoc_insertion_point(field_set_char:filesync.FileInfo.filename)
 }
-inline void fileInfo::set_filename(const char* value, size_t size) {
+inline void FileInfo::set_filename(const char* value, size_t size) {
   set_has_filename();
   filename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:filesync.fileInfo.filename)
+  // @@protoc_insertion_point(field_set_pointer:filesync.FileInfo.filename)
 }
-inline ::std::string* fileInfo::mutable_filename() {
+inline ::std::string* FileInfo::mutable_filename() {
   set_has_filename();
-  // @@protoc_insertion_point(field_mutable:filesync.fileInfo.filename)
+  // @@protoc_insertion_point(field_mutable:filesync.FileInfo.filename)
   return filename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* fileInfo::release_filename() {
-  // @@protoc_insertion_point(field_release:filesync.fileInfo.filename)
+inline ::std::string* FileInfo::release_filename() {
+  // @@protoc_insertion_point(field_release:filesync.FileInfo.filename)
   clear_has_filename();
   return filename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void fileInfo::set_allocated_filename(::std::string* filename) {
+inline void FileInfo::set_allocated_filename(::std::string* filename) {
   if (filename != NULL) {
     set_has_filename();
   } else {
     clear_has_filename();
   }
   filename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), filename);
-  // @@protoc_insertion_point(field_set_allocated:filesync.fileInfo.filename)
+  // @@protoc_insertion_point(field_set_allocated:filesync.FileInfo.filename)
 }
 
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS

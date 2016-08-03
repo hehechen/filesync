@@ -11,15 +11,17 @@
 #include <muduo/net/InetAddress.h>
 #include <fstream>
 
-SyncServer::SyncServer(muduo::net::EventLoop *loop,int port):serverAddr(port),
-    server_(loop,serverAddr,"syncServer")
+SyncServer::SyncServer(const char *root,muduo::net::EventLoop *loop,int port)
+    :serverAddr(port),
+      rootDir(root),
+      server_(loop,serverAddr,"syncServer")
 {
     server_.setConnectionCallback(boost::bind(&SyncServer::onConnection,this,_1));
     server_.setMessageCallback(boost::bind(&SyncServer::onMessage,this,_1,_2,_3));
 
-    codec.registerCallback<filesync::syncInfo>(std::bind(&SyncServer::onSyncInfo,this,
+    codec.registerCallback<filesync::SyncInfo>(std::bind(&SyncServer::onSyncInfo,this,
                                                          std::placeholders::_1,std::placeholders::_2));
-    codec.registerCallback<filesync::fileInfo>(std::bind(&SyncServer::onFileInfo,this,
+    codec.registerCallback<filesync::FileInfo>(std::bind(&SyncServer::onFileInfo,this,
                                                          std::placeholders::_1,std::placeholders::_2));
 }
 //连接到来时，更新ipMap，并根据此ip的连接次数设置此conn的类型
@@ -42,7 +44,7 @@ void SyncServer::onConnection(const muduo::net::TcpConnectionPtr &conn)
         info_ptr->type = CONTROL;
         conn->setContext(info_ptr);
         //告知客户端这是控制通道
-        filesync::isControl msg;
+        filesync::IsControl msg;
         msg.set_id(1);
         std::string send_str = Codec::enCode(msg);
         conn->send(send_str);
@@ -79,21 +81,48 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
 {
     int id = message->id();
     std::string filename = message->filename();
+    std::string localname = rootDir+filename;
     switch(id)
     {
+    case 0:
+    {//创建文件夹
+        if(::access(localname.c_str(),F_OK) != 0)
+            mkdir(localname.c_str(),0666);
+        break;
+    }
     case 1:
     {//创建文件
     }
     case 2:
     {//文件内容修改
         //向客户端发送sendfile命令
-        filesync::sendfile msg;
+        filesync::SendFile msg;
         msg.set_id(1);
         msg.set_filename(filename);
         std::string cmd = codec.enCode(msg);
         CHEN_LOG(DEBUG,"syncInfo 1 :----%s",cmd.c_str());
         conn->send(cmd);
         break;
+    }
+    case 3:
+    {//删除文件
+        if(access(localname.c_str(),F_OK) != 0) //文件不存在
+            CHEN_LOG(INFO,"file %s don't exit",localname.c_str());
+        else
+        {
+            char rmCmd[512];
+            sprintf(rmCmd,"rm -rf %s",localname.c_str());
+            system(rmCmd);
+        }
+        break;
+    }
+    case 4:
+    {//重命名
+        std::string newFilename = message->newfilename();
+        if(rename(localname.c_str(),(rootDir+newFilename).c_str()) < 0)
+            CHEN_LOG(ERROR,"rename %s error",localname.c_str());
+        CHEN_LOG(DEBUG,"rename %s to %s",localname.c_str(),
+                                    (rootDir+newFilename).c_str());
     }
     }
 }
@@ -103,7 +132,7 @@ void SyncServer::onFileInfo(const muduo::net::TcpConnectionPtr &conn,
 {
     Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
     info_ptr->isRecving = true;
-    std::string filename = info_ptr->filename = message->filename();
+    std::string filename = info_ptr->filename = rootDir+message->filename();
     info_ptr->totalSize = info_ptr->remainSize = message->size();
     //如果同名文件存在则删除
     if(access(filename.c_str(),F_OK) == 0)
