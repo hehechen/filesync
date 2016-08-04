@@ -8,6 +8,11 @@ message SyncInfo
     optional string MD5 = 5;    //文件的md5
 }
 
+message Init
+{//初始化
+    repeated SyncInfo info = 1;    //文件的md5
+}
+
 message SendFile
 {//告知哪些文件需要发送或接受
     required int32 id = 1;  //消息标识，0:服务器传给客户端,1:客户端传给服务器

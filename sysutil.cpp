@@ -1,6 +1,8 @@
 #include "sysutil.h"
 #include <iostream>
 #include <string>
+#include "codec.h"
+#include "protobuf/filesync.pb.h"
 
 using namespace std;
 namespace sysutil{
@@ -228,5 +230,77 @@ void fileRecvfromBuf(const char *filename,const char *buf,int size)
     close(fd);
 }
 
+/**
+ * @brief send_SyncInfo  发送SyncInfo信息
+ * @param socketfd
+ * @param id
+ * @param filename
+ * @param newname       新文件名，发送重命名信息时才用
+ */
+void send_SyncInfo(int socketfd,int id,string filename,string newname)
+{
+    filesync::SyncInfo msg;
+    msg.set_id(id);
+    msg.set_filename(filename);
+    if(4 == id) //重命名
+        msg.set_newfilename(newname);
+    string send = Codec::enCode(msg);
+    sysutil::writen(socketfd,send.c_str(),send.size());
+}
+
+/**
+ * @brief send_SyncInfo  发送SyncInfo信息
+ * @param conn
+ * @param id
+ * @param filename
+ * @param newname       新文件名，发送重命名信息时才用
+ */
+void send_SyncInfo(muduo::net::TcpConnectionPtr &conn, int id, string filename, string newname)
+{
+    filesync::SyncInfo msg;
+    msg.set_id(id);
+    msg.set_filename(filename);
+    if(4 == id) //重命名
+        msg.set_newfilename(newname);
+    string send = Codec::enCode(msg);
+    conn->send(send);
+}
+
+
+void syncToClient(muduo::net::TcpConnectionPtr &conn,string root,string dir,
+                                vector<string> &files)
+{
+//    DIR *odir = NULL;
+//    if((odir = opendir(dir.c_str())) == NULL)
+//        CHEN_LOG(ERROR,"open dir %s error",dir.c_str());
+//    struct dirent *dent;
+//    while((dent = readdir(odir)) != NULL)
+//    {
+//        if (dent->d_name[0] == '.') //隐藏文件跳过
+//            continue;
+//        string subdir = string(dir) + dent->d_name;
+//        string remote_subdir = subdir.substr(root.size());
+//        bool isFound = false;
+//        for(auto it:files)
+//        {
+//            if(it == remote_subdir)
+//            {
+//                isFound = true;
+//                break;
+//            }
+//        }
+//        if(isFound)
+//            continue;
+//        if(dent->d_type == DT_DIR)
+//        {//文件夹
+//            send_SyncInfo(conn,0,remote_subdir);
+//            syncToClient(socketfd,root,(subdir + "/").c_str(),files);
+//        }
+//        else
+//        {
+
+//        }
+//    }
+}
 }
 

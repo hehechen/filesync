@@ -24,7 +24,8 @@ SOURCES += main.cpp \
     test/muduo_test.cpp \
     syncserver.cpp \
     protobuf/filesync.pb.cc \
-    codec.cpp
+    codec.cpp \
+    md5.cpp
 
 HEADERS += \
     socket.h \
@@ -34,7 +35,8 @@ HEADERS += \
     syncserver.h \
     protobuf/filesync.sendfile.pb.h \
     protobuf/filesync.pb.h \
-    codec.h
+    codec.h \
+    md5.h
 
 DISTFILES += \
     protobuf/filesync.proto
