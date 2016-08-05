@@ -232,30 +232,13 @@ void fileRecvfromBuf(const char *filename,const char *buf,int size)
 
 /**
  * @brief send_SyncInfo  发送SyncInfo信息
- * @param socketfd
- * @param id
- * @param filename
- * @param newname       新文件名，发送重命名信息时才用
- */
-void send_SyncInfo(int socketfd,int id,string filename,string newname)
-{
-    filesync::SyncInfo msg;
-    msg.set_id(id);
-    msg.set_filename(filename);
-    if(4 == id) //重命名
-        msg.set_newfilename(newname);
-    string send = Codec::enCode(msg);
-    sysutil::writen(socketfd,send.c_str(),send.size());
-}
-
-/**
- * @brief send_SyncInfo  发送SyncInfo信息
  * @param conn
  * @param id
  * @param filename
  * @param newname       新文件名，发送重命名信息时才用
  */
-void send_SyncInfo(muduo::net::TcpConnectionPtr &conn, int id, string filename, string newname)
+void send_SyncInfo(const muduo::net::TcpConnectionPtr &conn, int id,
+                   string filename, string newname)
 {
     filesync::SyncInfo msg;
     msg.set_id(id);
@@ -266,41 +249,58 @@ void send_SyncInfo(muduo::net::TcpConnectionPtr &conn, int id, string filename, 
     conn->send(send);
 }
 
-
-void syncToClient(muduo::net::TcpConnectionPtr &conn,string root,string dir,
-                                vector<string> &files)
+/**
+ * @brief getFileMd5    利用qt库获取md5，支持大文件
+ * @param filePath      文件名
+ * @return
+ */
+string getFileMd5(string filePath)
 {
-//    DIR *odir = NULL;
-//    if((odir = opendir(dir.c_str())) == NULL)
-//        CHEN_LOG(ERROR,"open dir %s error",dir.c_str());
-//    struct dirent *dent;
-//    while((dent = readdir(odir)) != NULL)
-//    {
-//        if (dent->d_name[0] == '.') //隐藏文件跳过
-//            continue;
-//        string subdir = string(dir) + dent->d_name;
-//        string remote_subdir = subdir.substr(root.size());
-//        bool isFound = false;
-//        for(auto it:files)
-//        {
-//            if(it == remote_subdir)
-//            {
-//                isFound = true;
-//                break;
-//            }
-//        }
-//        if(isFound)
-//            continue;
-//        if(dent->d_type == DT_DIR)
-//        {//文件夹
-//            send_SyncInfo(conn,0,remote_subdir);
-//            syncToClient(socketfd,root,(subdir + "/").c_str(),files);
-//        }
-//        else
-//        {
+    QFile localFile(QString::fromStdString(filePath));
 
-//        }
-//    }
+    if (!localFile.open(QFile::ReadOnly))
+    {
+        qDebug() << "file open error.";
+        return 0;
+    }
+
+    QCryptographicHash ch(QCryptographicHash::Md5);
+
+    quint64 totalBytes = 0;
+    quint64 bytesWritten = 0;
+    quint64 bytesToWrite = 0;
+    quint64 loadSize = 1024 * 4;
+    QByteArray buf;
+
+    totalBytes = localFile.size();
+    bytesToWrite = totalBytes;
+
+    while (1)
+    {
+        if(bytesToWrite > 0)
+        {
+            buf = localFile.read(qMin(bytesToWrite, loadSize));
+            ch.addData(buf);
+            bytesWritten += buf.length();
+            bytesToWrite -= buf.length();
+            buf.resize(0);
+        }
+        else
+        {
+            break;
+        }
+
+        if(bytesWritten == totalBytes)
+        {
+            break;
+        }
+    }
+
+    localFile.close();
+    QString md5 = ch.result().toHex();
+    return md5.toStdString();
 }
+
+
 }
 

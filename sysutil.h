@@ -4,6 +4,11 @@
 #include "common.h"
 #include "syncserver.h"
 #include <muduo/net/TcpConnection.h>
+#include <QString>
+#include <QByteArray>
+#include <QCryptographicHash>
+#include <QFile>
+#include <QDebug>
 /*系统工具*/
 namespace sysutil{
     int read_timeout(int fd,unsigned int wait_seconds);
@@ -23,9 +28,11 @@ namespace sysutil{
     void sendfileWithproto(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr &info_ptr,
                            const char* localname,const char *remotename);
     //发送syncInfo信息
-    void send_SyncInfo(int socketfd, int id, std::string filename,
+    void send_SyncInfo(const muduo::net::TcpConnectionPtr &conn, int id, std::string filename,
                                         std::string newname = "");
     //同步整个文件夹
     void sync_Dir(int socketfd, std::string root, std::string dir);
+    //利用qt库获取md5，支持大文件
+    std::string getFileMd5(std::string filePath);
 }
 #endif // SYSUTIL_H

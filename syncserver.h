@@ -21,6 +21,7 @@ struct Info_Conn{
     int totalSize = 0;
     int remainSize = 0;
     std::string filename;   //本地文件名包含路径
+    std::string md5;        //要接收的文件的md5
     FILE *fp;     //要发送的文件的fp
 };
 typedef std::shared_ptr<Info_Conn> Info_ConnPtr;
@@ -46,6 +47,8 @@ private:
     //在此ip掉线时，也能方便关掉所有的conn
     typedef std::vector<muduo::net::TcpConnectionPtr> Con_Vec;
     std::unordered_map<muduo::string,Con_Vec>   ipMaps;
+    //文件名和md5的map
+    std::unordered_map<std::string,std::string> md5Maps;
 
     typedef std::function<void(muduo::net::TcpConnectionPtr)> SendTask;
     typedef std::queue<SendTask> TaskQueue; //发送文件的任务队列
@@ -58,18 +61,20 @@ private:
                   muduo::net::Buffer *buf,muduo::Timestamp receiveTime);
 
     //接收到相应protobuf的处理函数
-    void onInit(muduo::net::TcpConnectionPtr &conn,InitPtr message);
+    void onInit(const muduo::net::TcpConnectionPtr &conn, const InitPtr &message);
     void onSyncInfo(const muduo::net::TcpConnectionPtr &conn, const SyncInfoPtr &message);
     void onSendFile(muduo::net::TcpConnectionPtr &conn,MessagePtr message);
     void onFileInfo(const muduo::net::TcpConnectionPtr &conn, const FileInfoPtr &message);
 
     //找出客户端不存在的文件并发送给客户端
-    bool syncToClient(muduo::net::TcpConnectionPtr &conn);
+  //  bool syncToClient(muduo::net::TcpConnectionPtr &conn);
     void recvFile(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr &info_ptr);
     void sendfileWithproto(const muduo::net::TcpConnectionPtr &conn, std::string &localname);
     void onWriteComplete(const muduo::net::TcpConnectionPtr &conn);
     muduo::net::TcpConnectionPtr getIdleConn(muduo::string ip); //获取该客户端的空闲文件传输连接
     void doNextSend(const muduo::net::TcpConnectionPtr &conn);//执行下一个发送任务
+    void syncToClient(const muduo::net::TcpConnectionPtr &conn, std::string dir, std::vector<std::string> &files);
+    void initMd5(std::string dir);
 };
 
 #endif // SYNCSERVER_H

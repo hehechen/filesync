@@ -1,5 +1,6 @@
 #include "syncserver.h"
 #include "sysutil.h"
+#include "md5.h"
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -11,14 +12,24 @@
 #include <muduo/net/InetAddress.h>
 #include <fstream>
 
+#include <QFile>
+#include <QCryptographicHash>
+#include <QByteArray>
+
+using namespace std;
+
 SyncServer::SyncServer(const char *root,muduo::net::EventLoop *loop,int port)
     : rootDir(root),
       serverAddr(port),
       server_(loop,serverAddr,"syncServer")
 {
+    initMd5(rootDir);
+    CHEN_LOG(DEBUG,"MD5 completed");
     server_.setConnectionCallback(boost::bind(&SyncServer::onConnection,this,_1));
     server_.setMessageCallback(boost::bind(&SyncServer::onMessage,this,_1,_2,_3));
 
+    codec.registerCallback<filesync::Init>(std::bind(&SyncServer::onInit,this,
+                                                         std::placeholders::_1,std::placeholders::_2));
     codec.registerCallback<filesync::SyncInfo>(std::bind(&SyncServer::onSyncInfo,this,
                                                          std::placeholders::_1,std::placeholders::_2));
     codec.registerCallback<filesync::FileInfo>(std::bind(&SyncServer::onFileInfo,this,
@@ -78,25 +89,31 @@ void SyncServer::onMessage(const muduo::net::TcpConnectionPtr &conn,
     }
 }
 //客户端第一次上线发过来文件信息
-void SyncServer::onInit(muduo::net::TcpConnectionPtr &conn, InitPtr message)
+void SyncServer::onInit(const muduo::net::TcpConnectionPtr &conn,const InitPtr &message)
 {
+    CHEN_LOG(DEBUG,"INIT RECEIVE");
+    vector<string> clientFiles;
     for(int i=0;i<message->info_size();i++)
     {
         filesync::SyncInfo info = message->info(i);
-        std::string filename = info.filename();
-        std::string localname = rootDir+filename;
-        SyncInfoPtr tmpPtr(&info);
+        string filename = info.filename();
+        string localname = rootDir+filename;
+        SyncInfoPtr tmpPtr(new filesync::SyncInfo);
+        tmpPtr->set_filename(filename);
+        tmpPtr->set_md5(info.md5());
+        tmpPtr->set_id(info.id());
         onSyncInfo(conn,tmpPtr);
+        clientFiles.push_back(localname);
     }
-    syncToClient(conn);
+    syncToClient(conn,rootDir,clientFiles);
 }
 //收到客户端发来的修改信息
 void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
                             const SyncInfoPtr &message)
 {
     int id = message->id();
-    std::string filename = message->filename();
-    std::string localname = rootDir+filename;
+    string filename = message->filename();
+    string localname = rootDir+filename;
     switch(id)
     {
     case 0:
@@ -110,17 +127,24 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
     }
     case 2:
     {//文件内容修改
+        auto it = md5Maps.find(localname);
+        if(it != md5Maps.end())
+            if(it->second == message->md5())
+                break;      //已有相同文件则跳过
         //向客户端发送sendfile命令
         filesync::SendFile msg;
         msg.set_id(1);
         msg.set_filename(filename);
-        std::string cmd = codec.enCode(msg);
+        string cmd = codec.enCode(msg);
         CHEN_LOG(DEBUG,"sendfile :----%s",cmd.c_str());
         conn->send(cmd);
         break;
     }
     case 3:
     {//删除文件
+        auto it = md5Maps.find(localname);
+        if(it != md5Maps.end())
+            md5Maps.erase(it);        //删除此文件的md5信息
         if(access(localname.c_str(),F_OK) != 0) //文件不存在
             CHEN_LOG(INFO,"file %s don't exit",localname.c_str());
         else
@@ -133,7 +157,7 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
     }
     case 4:
     {//重命名
-        std::string newFilename = message->newfilename();
+        string newFilename = message->newfilename();
         if(rename(localname.c_str(),(rootDir+newFilename).c_str()) < 0)
             CHEN_LOG(ERROR,"rename %s error",localname.c_str());
         CHEN_LOG(DEBUG,"rename %s to %s",localname.c_str(),
@@ -147,7 +171,7 @@ void SyncServer::onFileInfo(const muduo::net::TcpConnectionPtr &conn,
 {
     Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
     info_ptr->isRecving = true;
-    std::string filename = info_ptr->filename = rootDir+message->filename();
+    string filename = info_ptr->filename = rootDir+message->filename();
     info_ptr->totalSize = info_ptr->remainSize = message->size();
     //如果同名文件存在则删除
     if(access(filename.c_str(),F_OK) == 0)
@@ -172,6 +196,8 @@ void SyncServer::recvFile(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr 
         info_ptr->isRecving = false;
         info_ptr->remainSize = 0;
         info_ptr->totalSize = 0;
+        //更新md5Maps
+        md5Maps[info_ptr->filename] = info_ptr->md5;
         //发送给其它客户端
         for(auto it = queueMaps.begin();it!=queueMaps.end();++it)
         {
@@ -179,13 +205,15 @@ void SyncServer::recvFile(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr 
                 continue;
             muduo::net::TcpConnectionPtr idleConn = getIdleConn(it->first);
             if(idleConn == nullptr)
-            {
+            {//加入发送队列
                 it->second.push(std::bind(&SyncServer::sendfileWithproto,this,
                                           std::placeholders::_1,info_ptr->filename));
             }
-            sendfileWithproto(idleConn,info_ptr->filename);
+            else
+                sendfileWithproto(idleConn,info_ptr->filename);
         }
         info_ptr->filename.clear();
+        info_ptr->md5.clear();
     }
     else
     {
@@ -200,12 +228,12 @@ void SyncServer::recvFile(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr 
 /**
  * @brief sendfileWithproto 先发送fileInfo信息再发送文件内容，不能发送文件夹！！
  *        服务端不能和客户端一样阻塞写，要用网络库的接口，socket可写的时候调用回调函数写数据
- * @param conn  此时conn已有context
+ * @param conn  文件由此conn发出，此时conn已有context
  * @param localname 本地路径
  * @param remotename    不包含顶层文件夹的文件名
  */
 void SyncServer::sendfileWithproto(const muduo::net::TcpConnectionPtr &conn
-                                   ,std::string &localname)
+                                   ,string &localname)
 {
     int fd = open(localname.c_str(),O_RDONLY);
     if(-1 == fd)
@@ -296,5 +324,74 @@ void SyncServer::doNextSend(const muduo::net::TcpConnectionPtr &conn)
     }
     else
         CHEN_LOG(ERROR,"can't find send queue");
+}
+
+void SyncServer::syncToClient(const muduo::net::TcpConnectionPtr &conn,string dir,
+                                vector<string> &files)
+{
+    DIR *odir = NULL;
+    if((odir = opendir(dir.c_str())) == NULL)
+        CHEN_LOG(ERROR,"open dir %s error",dir.c_str());
+    struct dirent *dent;
+    while((dent = readdir(odir)) != NULL)
+    {
+        if (dent->d_name[0] == '.') //隐藏文件跳过
+            continue;
+        string subdir = string(dir) + dent->d_name;
+        string remote_subdir = subdir.substr(rootDir.size());
+        bool isFound = false;
+        for(auto it:files)
+        {
+            if(it == subdir)
+            {
+                isFound = true;
+                break;
+            }
+        }
+        if(isFound)
+            continue;
+        if(dent->d_type == DT_DIR)
+        {//文件夹
+            sysutil::send_SyncInfo(conn,0,remote_subdir);
+            syncToClient(conn,(subdir + "/").c_str(),files);
+        }
+        else
+        {
+            muduo::string ip = conn->peerAddress().toIp();
+            muduo::net::TcpConnectionPtr idleConn = getIdleConn(ip);
+            if(idleConn == nullptr)
+            {//加入发送队列
+                queueMaps[ip].push(std::bind(&SyncServer::sendfileWithproto,this,
+                                          std::placeholders::_1,subdir));
+            }
+            else
+                sendfileWithproto(idleConn,subdir);
+        }
+    }
+}
+/**
+ * @brief SyncServer::initMd5 初始化md5Maps
+ */
+void SyncServer::initMd5(string dir)
+{
+    DIR *odir = NULL;
+    if((odir = opendir(dir.c_str())) == NULL)
+        CHEN_LOG(ERROR,"open dir %s error",dir.c_str());
+    struct dirent *dent;
+    while((dent = readdir(odir)) != NULL)
+    {
+        if (dent->d_name[0] == '.') //隐藏文件跳过
+            continue;
+        string subdir = string(dir) + dent->d_name;
+        if(dent->d_type == DT_DIR)
+        {//文件夹
+            initMd5(subdir + "/");
+        }
+        else
+        {
+            string md5 = sysutil::getFileMd5(subdir);
+            md5Maps.insert(make_pair(subdir,md5));
+        }
+    }
 }
 
