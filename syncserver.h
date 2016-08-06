@@ -8,6 +8,8 @@
 #include <muduo/net/EventLoop.h>
 #include <muduo/net/TcpConnection.h>
 #include <muduo/net/TcpServer.h>
+
+#include "parseconfig.h"
 #include "codec.h"
 #include "protobuf/filesync.pb.h"
 
@@ -34,31 +36,37 @@ typedef std::shared_ptr<filesync::FileInfo> FileInfoPtr;
 class SyncServer
 {
 public:
-    SyncServer(const char *root,muduo::net::EventLoop *loop, int port);
+    SyncServer(muduo::net::EventLoop *loop, int port);
     void start()    {   server_.start();    }
 private:
     static const int KHeaderLen = 4;    //包的长度信息为4字节
 
-    std::string rootDir;    //要同步的文件夹
     muduo::net::InetAddress serverAddr;
     muduo::net::TcpServer server_;
+    ParseConfig *pc;
     Codec codec;
+    std::string rootDir;    //要同步的文件夹
     //存放此ip对应的TcpConnection，这样可以方便查看此ip连接的次数，以决定此conn的类型
     //在此ip掉线时，也能方便关掉所有的conn
     typedef std::vector<muduo::net::TcpConnectionPtr> Con_Vec;
-    std::unordered_map<muduo::string,Con_Vec>   ipMaps;
+    std::unordered_map<muduo::string,Con_Vec>   ipMaps;    
+    muduo::MutexLock ipMaps_mutex;
     //文件名和md5的map
     std::unordered_map<std::string,std::string> md5Maps;
+    muduo::MutexLock md5Maps_mutex;
 
     typedef std::function<void(muduo::net::TcpConnectionPtr)> SendTask;
     typedef std::queue<SendTask> TaskQueue; //发送文件的任务队列
     std::unordered_map<muduo::string,TaskQueue> queueMaps;  //每个ip一个任务队列
+    muduo::MutexLock queueMaps_mutex;
 
     //连接到来的处理函数
     void onConnection(const muduo::net::TcpConnectionPtr &conn);
     //接收原始包的处理函数
     void onMessage(const muduo::net::TcpConnectionPtr &conn,
                   muduo::net::Buffer *buf,muduo::Timestamp receiveTime);
+    //连接断开的处理函数
+    void onShutDown(const muduo::net::TcpConnectionPtr &conn);
 
     //接收到相应protobuf的处理函数
     void onInit(const muduo::net::TcpConnectionPtr &conn, const InitPtr &message);

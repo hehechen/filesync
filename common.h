@@ -59,10 +59,11 @@ static const char* LOG_STR[] = {
     char msg[1024];                        \
     char buf[32];                                   \
     sprintf(msg, format, ##__VA_ARGS__);             \
-    if (level >= 0) {\
+    if (level >= INFO) {\
         time_t now = time(NULL);                      \
-        strftime(buf, sizeof(buf), "%Y%m%d %H:%M:%S", localtime(&now)); \
-        fprintf(stdout, "[%s] [%s] [file:%s] [line:%d] %s\n",buf,LOG_STR[level],__FILE__,__LINE__, msg); \
+        strftime(buf, sizeof(buf), "%H:%M:%S", localtime(&now)); \
+        fprintf(stdout, "[%s] [%s] [file:%s] [line:%d] [tid:%ld] %s\n",buf,   \
+                            LOG_STR[level],__FILE__,__LINE__,pthread_self(), msg); \
         fflush (stdout); \
     }\
      if (level >= ERROR) {\

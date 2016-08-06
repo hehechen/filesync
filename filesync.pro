@@ -25,7 +25,9 @@ SOURCES += main.cpp \
     syncserver.cpp \
     protobuf/filesync.pb.cc \
     codec.cpp \
-    md5.cpp
+    parseconfig.cpp \
+    str_tool.cpp \
+    test/parsetest.cpp
 
 HEADERS += \
     socket.h \
@@ -33,10 +35,10 @@ HEADERS += \
     sysutil.h \
     test/echo.h \
     syncserver.h \
-    protobuf/filesync.sendfile.pb.h \
     protobuf/filesync.pb.h \
     codec.h \
-    md5.h
+    parseconfig.h \
+    str_tool.h
 
 DISTFILES += \
     protobuf/filesync.proto

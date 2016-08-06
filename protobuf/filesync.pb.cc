@@ -67,7 +67,9 @@ void protobuf_AssignDesc_filesync_2eproto() {
       GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SyncInfo, _internal_metadata_),
       -1);
   Init_descriptor_ = file->message_type(1);
-  static const int Init_offsets_[1] = {
+  static const int Init_offsets_[3] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Init, username_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Init, password_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Init, info_),
   };
   Init_reflection_ =
@@ -178,11 +180,12 @@ void protobuf_AddDesc_filesync_2eproto() {
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
     "\n\016filesync.proto\022\010filesync\"X\n\010SyncInfo\022\n"
     "\n\002id\030\001 \002(\005\022\020\n\010filename\030\002 \002(\t\022\023\n\013newFilen"
-    "ame\030\003 \001(\t\022\014\n\004size\030\004 \001(\005\022\013\n\003MD5\030\005 \001(\t\"(\n\004"
-    "Init\022 \n\004info\030\001 \003(\0132\022.filesync.SyncInfo\"("
-    "\n\010SendFile\022\n\n\002id\030\001 \002(\005\022\020\n\010filename\030\002 \002(\t"
-    "\"\027\n\tIsControl\022\n\n\002id\030\001 \002(\005\"*\n\010FileInfo\022\014\n"
-    "\004size\030\001 \002(\005\022\020\n\010filename\030\002 \002(\t", 269);
+    "ame\030\003 \001(\t\022\014\n\004size\030\004 \001(\005\022\013\n\003MD5\030\005 \001(\t\"L\n\004"
+    "Init\022\020\n\010username\030\001 \002(\t\022\020\n\010password\030\002 \002(\t"
+    "\022 \n\004info\030\003 \003(\0132\022.filesync.SyncInfo\"(\n\010Se"
+    "ndFile\022\n\n\002id\030\001 \002(\005\022\020\n\010filename\030\002 \002(\t\"\027\n\t"
+    "IsControl\022\n\n\002id\030\001 \002(\005\"*\n\010FileInfo\022\014\n\004siz"
+    "e\030\001 \002(\005\022\020\n\010filename\030\002 \002(\t", 305);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "filesync.proto", &protobuf_RegisterTypes);
   SyncInfo::default_instance_ = new SyncInfo();
@@ -917,6 +920,8 @@ void SyncInfo::clear_md5() {
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int Init::kUsernameFieldNumber;
+const int Init::kPasswordFieldNumber;
 const int Init::kInfoFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
@@ -938,7 +943,10 @@ Init::Init(const Init& from)
 }
 
 void Init::SharedCtor() {
+  ::google::protobuf::internal::GetEmptyString();
   _cached_size_ = 0;
+  username_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  password_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -948,6 +956,8 @@ Init::~Init() {
 }
 
 void Init::SharedDtor() {
+  username_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  password_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (this != default_instance_) {
   }
 }
@@ -979,6 +989,14 @@ Init* Init::New(::google::protobuf::Arena* arena) const {
 
 void Init::Clear() {
 // @@protoc_insertion_point(message_clear_start:filesync.Init)
+  if (_has_bits_[0 / 32] & 3u) {
+    if (has_username()) {
+      username_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    }
+    if (has_password()) {
+      password_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    }
+  }
   info_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   if (_internal_metadata_.have_unknown_fields()) {
@@ -996,9 +1014,43 @@ bool Init::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // repeated .filesync.SyncInfo info = 1;
+      // required string username = 1;
       case 1: {
         if (tag == 10) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_username()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+            this->username().data(), this->username().length(),
+            ::google::protobuf::internal::WireFormat::PARSE,
+            "filesync.Init.username");
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(18)) goto parse_password;
+        break;
+      }
+
+      // required string password = 2;
+      case 2: {
+        if (tag == 18) {
+         parse_password:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_password()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+            this->password().data(), this->password().length(),
+            ::google::protobuf::internal::WireFormat::PARSE,
+            "filesync.Init.password");
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(26)) goto parse_info;
+        break;
+      }
+
+      // repeated .filesync.SyncInfo info = 3;
+      case 3: {
+        if (tag == 26) {
+         parse_info:
           DO_(input->IncrementRecursionDepth());
          parse_loop_info:
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtualNoRecursionDepth(
@@ -1006,7 +1058,7 @@ bool Init::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(10)) goto parse_loop_info;
+        if (input->ExpectTag(26)) goto parse_loop_info;
         input->UnsafeDecrementRecursionDepth();
         if (input->ExpectAtEnd()) goto success;
         break;
@@ -1037,10 +1089,30 @@ failure:
 void Init::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // @@protoc_insertion_point(serialize_start:filesync.Init)
-  // repeated .filesync.SyncInfo info = 1;
+  // required string username = 1;
+  if (has_username()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+      this->username().data(), this->username().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE,
+      "filesync.Init.username");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      1, this->username(), output);
+  }
+
+  // required string password = 2;
+  if (has_password()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+      this->password().data(), this->password().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE,
+      "filesync.Init.password");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      2, this->password(), output);
+  }
+
+  // repeated .filesync.SyncInfo info = 3;
   for (unsigned int i = 0, n = this->info_size(); i < n; i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      1, this->info(i), output);
+      3, this->info(i), output);
   }
 
   if (_internal_metadata_.have_unknown_fields()) {
@@ -1053,11 +1125,33 @@ void Init::SerializeWithCachedSizes(
 ::google::protobuf::uint8* Init::InternalSerializeWithCachedSizesToArray(
     bool deterministic, ::google::protobuf::uint8* target) const {
   // @@protoc_insertion_point(serialize_to_array_start:filesync.Init)
-  // repeated .filesync.SyncInfo info = 1;
+  // required string username = 1;
+  if (has_username()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+      this->username().data(), this->username().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE,
+      "filesync.Init.username");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        1, this->username(), target);
+  }
+
+  // required string password = 2;
+  if (has_password()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+      this->password().data(), this->password().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE,
+      "filesync.Init.password");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        2, this->password(), target);
+  }
+
+  // repeated .filesync.SyncInfo info = 3;
   for (unsigned int i = 0, n = this->info_size(); i < n; i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageNoVirtualToArray(
-        1, this->info(i), false, target);
+        3, this->info(i), false, target);
   }
 
   if (_internal_metadata_.have_unknown_fields()) {
@@ -1068,11 +1162,45 @@ void Init::SerializeWithCachedSizes(
   return target;
 }
 
+int Init::RequiredFieldsByteSizeFallback() const {
+// @@protoc_insertion_point(required_fields_byte_size_fallback_start:filesync.Init)
+  int total_size = 0;
+
+  if (has_username()) {
+    // required string username = 1;
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->username());
+  }
+
+  if (has_password()) {
+    // required string password = 2;
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->password());
+  }
+
+  return total_size;
+}
 int Init::ByteSize() const {
 // @@protoc_insertion_point(message_byte_size_start:filesync.Init)
   int total_size = 0;
 
-  // repeated .filesync.SyncInfo info = 1;
+  if (((_has_bits_[0] & 0x00000003) ^ 0x00000003) == 0) {  // All required fields are present.
+    // required string username = 1;
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->username());
+
+    // required string password = 2;
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->password());
+
+  } else {
+    total_size += RequiredFieldsByteSizeFallback();
+  }
+  // repeated .filesync.SyncInfo info = 3;
   total_size += 1 * this->info_size();
   for (int i = 0; i < this->info_size(); i++) {
     total_size +=
@@ -1114,6 +1242,16 @@ void Init::MergeFrom(const Init& from) {
     ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
   }
   info_.MergeFrom(from.info_);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_username()) {
+      set_has_username();
+      username_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.username_);
+    }
+    if (from.has_password()) {
+      set_has_password();
+      password_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.password_);
+    }
+  }
   if (from._internal_metadata_.have_unknown_fields()) {
     mutable_unknown_fields()->MergeFrom(from.unknown_fields());
   }
@@ -1134,6 +1272,7 @@ void Init::CopyFrom(const Init& from) {
 }
 
 bool Init::IsInitialized() const {
+  if ((_has_bits_[0] & 0x00000003) != 0x00000003) return false;
 
   if (!::google::protobuf::internal::AllAreInitialized(this->info())) return false;
   return true;
@@ -1144,6 +1283,8 @@ void Init::Swap(Init* other) {
   InternalSwap(other);
 }
 void Init::InternalSwap(Init* other) {
+  username_.Swap(&other->username_);
+  password_.Swap(&other->password_);
   info_.UnsafeArenaSwap(&other->info_);
   std::swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
@@ -1161,7 +1302,115 @@ void Init::InternalSwap(Init* other) {
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
 // Init
 
-// repeated .filesync.SyncInfo info = 1;
+// required string username = 1;
+bool Init::has_username() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void Init::set_has_username() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void Init::clear_has_username() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void Init::clear_username() {
+  username_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_username();
+}
+ const ::std::string& Init::username() const {
+  // @@protoc_insertion_point(field_get:filesync.Init.username)
+  return username_.GetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+ void Init::set_username(const ::std::string& value) {
+  set_has_username();
+  username_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:filesync.Init.username)
+}
+ void Init::set_username(const char* value) {
+  set_has_username();
+  username_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:filesync.Init.username)
+}
+ void Init::set_username(const char* value, size_t size) {
+  set_has_username();
+  username_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:filesync.Init.username)
+}
+ ::std::string* Init::mutable_username() {
+  set_has_username();
+  // @@protoc_insertion_point(field_mutable:filesync.Init.username)
+  return username_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+ ::std::string* Init::release_username() {
+  // @@protoc_insertion_point(field_release:filesync.Init.username)
+  clear_has_username();
+  return username_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+ void Init::set_allocated_username(::std::string* username) {
+  if (username != NULL) {
+    set_has_username();
+  } else {
+    clear_has_username();
+  }
+  username_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), username);
+  // @@protoc_insertion_point(field_set_allocated:filesync.Init.username)
+}
+
+// required string password = 2;
+bool Init::has_password() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void Init::set_has_password() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void Init::clear_has_password() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void Init::clear_password() {
+  password_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_password();
+}
+ const ::std::string& Init::password() const {
+  // @@protoc_insertion_point(field_get:filesync.Init.password)
+  return password_.GetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+ void Init::set_password(const ::std::string& value) {
+  set_has_password();
+  password_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:filesync.Init.password)
+}
+ void Init::set_password(const char* value) {
+  set_has_password();
+  password_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:filesync.Init.password)
+}
+ void Init::set_password(const char* value, size_t size) {
+  set_has_password();
+  password_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:filesync.Init.password)
+}
+ ::std::string* Init::mutable_password() {
+  set_has_password();
+  // @@protoc_insertion_point(field_mutable:filesync.Init.password)
+  return password_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+ ::std::string* Init::release_password() {
+  // @@protoc_insertion_point(field_release:filesync.Init.password)
+  clear_has_password();
+  return password_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+ void Init::set_allocated_password(::std::string* password) {
+  if (password != NULL) {
+    set_has_password();
+  } else {
+    clear_has_password();
+  }
+  password_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), password);
+  // @@protoc_insertion_point(field_set_allocated:filesync.Init.password)
+}
+
+// repeated .filesync.SyncInfo info = 3;
 int Init::info_size() const {
   return info_.size();
 }

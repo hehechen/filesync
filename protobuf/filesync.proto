@@ -10,7 +10,9 @@ message SyncInfo
 
 message Init
 {//初始化
-    repeated SyncInfo info = 1;    //文件的md5
+    required string username = 1;
+    required string password = 2;
+    repeated SyncInfo info = 3;
 }
 
 message SendFile
