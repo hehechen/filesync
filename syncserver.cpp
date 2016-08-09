@@ -29,6 +29,8 @@ SyncServer::SyncServer(muduo::net::EventLoop *loop,int port)
     server_.setConnectionCallback(boost::bind(&SyncServer::onConnection,this,_1));
     server_.setMessageCallback(boost::bind(&SyncServer::onMessage,this,_1,_2,_3));
 
+    codec.registerCallback<filesync::SignIn>(std::bind(&SyncServer::onSignIn,this,
+                                                       std::placeholders::_1,std::placeholders::_2));
     codec.registerCallback<filesync::Init>(std::bind(&SyncServer::onInit,this,
                                                      std::placeholders::_1,std::placeholders::_2));
     codec.registerCallback<filesync::SyncInfo>(std::bind(&SyncServer::onSyncInfo,this,
@@ -36,96 +38,87 @@ SyncServer::SyncServer(muduo::net::EventLoop *loop,int port)
     codec.registerCallback<filesync::FileInfo>(std::bind(&SyncServer::onFileInfo,this,
                                                          std::placeholders::_1,std::placeholders::_2));
 }
-//连接到来时，更新ipMap，并根据此ip的连接次数设置此conn的类型
+//接收到连接，初始化conn相关的数据结构
 void SyncServer::onConnection(const muduo::net::TcpConnectionPtr &conn)
 {
     if(conn->connected())
-    {//连接到来
-        CHEN_LOG(DEBUG,"connected");
+    {
         Info_ConnPtr info_ptr(new Info_Conn );
-        muduo::string ip = conn->peerAddress().toIp();
-        auto it = ipMaps.find(ip);
-        if(it != ipMaps.end())
-        {
-            it->second.push_back(conn);
-            info_ptr->type = ConType::DATA;
-            conn->setContext(info_ptr);
-        }
-        else
-        {//此ip第一个连接的socket设置为控制通道
-            info_ptr->type = CONTROL;
-            conn->setContext(info_ptr);
-            Con_Vec vec;
-            vec.push_back(conn);
-            {
-                muduo::MutexLockGuard mutexLock(ipMaps_mutex);
-                ipMaps.insert(make_pair(ip,std::move(vec)));
-            }
-            //为此客户端初始化发送队列
-            TaskQueue emptyQueue;
-            {
-                muduo::MutexLockGuard mutexLock(queueMaps_mutex);
-                CHEN_LOG(INFO,"QUEUE LOCK");
-                queueMaps.insert(make_pair(ip,emptyQueue));
-            }
-            CHEN_LOG(INFO,"QUEUE UNLOCK");
-            //告知客户端这是控制通道
-            filesync::IsControl msg;
-            msg.set_id(1);
-            std::string send_str = Codec::enCode(msg);
-            conn->send(send_str);
-        }
+        conn->setContext(info_ptr);
     }
     else if(conn->disconnected())
     {//连接断开
-        auto it_ipMaps = ipMaps.find(conn->peerAddress().toIp());
-        if(it_ipMaps != ipMaps.end())
-            ipMaps.erase(it_ipMaps);
-        auto it_queueMaps = queueMaps.find(conn->peerAddress().toIp());
-        if(it_queueMaps != queueMaps.end())
-            queueMaps.erase(it_queueMaps);
+        Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
+        auto it_userMaps = userMaps.find(info_ptr->username);
+        if(it_userMaps != userMaps.end())
+            userMaps.erase(it_userMaps);
+        auto it_queueMaps = sendListMaps.find(info_ptr->username);
+        if(it_queueMaps != sendListMaps.end())
+            sendListMaps.erase(it_queueMaps);
     }
 }
-//接收到原始的数据包后的处理,根据conn的不同采取不同的处理
+//接收到原始的数据包后的处理
 void SyncServer::onMessage(const muduo::net::TcpConnectionPtr &conn,
                            muduo::net::Buffer *buf,muduo::Timestamp receiveTime)
 {
     Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
-    if(info_ptr->type == CONTROL)
-    {//控制通道
-        CHEN_LOG(DEBUG,"cmd parse...");
+    if(info_ptr->isRecving)
+    {//是文件数据
+        recvFile(conn,info_ptr);
+    }
+
+    else
+    {//是proto中定义的消息
         codec.parse(conn,buf);
     }
-    else
-    {//文件传输通道有数据到来，判断是消息还是文件数据
-        if(info_ptr->isRecving)
-        {//是文件数据
-            recvFile(conn,info_ptr);
-        }
-
-        else
-        {//解析信息并调用onFileInfo
-            CHEN_LOG(DEBUG,"file parse...");
-            codec.parse(conn,buf);
-        }
-    }
 }
-
-void SyncServer::onShutDown(const muduo::net::TcpConnectionPtr &conn)
-{
-
-}
-//客户端第一次上线发过来文件信息
-void SyncServer::onInit(const muduo::net::TcpConnectionPtr &conn,const InitPtr &message)
+//用户登录时，更新userMap，并根据此用户的连接次数设置此conn的类型
+void SyncServer::onSignIn(const muduo::net::TcpConnectionPtr &conn, const SignInPtr &message)
 {
     string username = message->username();
     string password = message->password();
     if(!pc->checkUser(username,password))
-    {
+    {//帐号错误直接关闭连接
         CHEN_LOG(INFO,"user invalid");
-
+        conn->forceClose();
         return;
     }
+    Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
+    info_ptr->username = username;
+    auto it = userMaps.find(username);
+    if(it != userMaps.end())
+    {
+        it->second.push_back(conn);
+        info_ptr->type = ConType::DATA;
+    }
+    else
+    {//此用户第一个连接的socket设置为控制通道
+        info_ptr->type = CONTROL;
+        Con_Vec vec;
+        vec.push_back(conn);
+        {
+            muduo::MutexLockGuard mutexLock(userMaps_mutex);
+            userMaps.insert(make_pair(username,std::move(vec)));
+        }
+        //为此客户端初始化发送队列
+        TaskList emptyQueue;
+        {
+            muduo::MutexLockGuard mutexLock(sendListMaps_mutex);
+            sendListMaps.insert(make_pair(username,emptyQueue));
+        }
+        //告知客户端这是控制通道
+        filesync::IsControl msg;
+        msg.set_id(1);
+        std::string send_str = Codec::enCode(msg);
+        conn->send(send_str);
+    }
+}
+
+
+//客户端第一次上线发过来文件信息
+void SyncServer::onInit(const muduo::net::TcpConnectionPtr &conn,const InitPtr &message)
+{
+
     CHEN_LOG(DEBUG,"INIT RECEIVE");
     vector<string> clientFiles;
     for(int i=0;i<message->info_size();i++)
@@ -150,6 +143,7 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
     string filename = message->filename();
     string newFilename = message->newfilename();
     string localname = rootDir+filename;
+    Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
     switch(id)
     {
     case 0:
@@ -196,6 +190,49 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
             sprintf(rmCmd,"rm -rf %s",localname.c_str());
             system(rmCmd);
         }
+        int sendsize = message->size();
+        if(sendsize > 0)
+        {//客户端上传过程中文件被删除
+            int pos = message->filename().find_last_of('/');
+            string parDir = message->filename().substr(0,pos+1);
+            string subfile = message->filename().substr(pos+1);
+            string filename = rootDir+parDir+"."+ info_ptr->username.c_str()+subfile;
+            Con_Vec conVec = userMaps[info_ptr->username];
+            for(auto it = conVec.begin();it != conVec.end();++it)
+            {
+                Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>((*it)->getContext());
+                if(info_ptr->receiveFilename == filename && info_ptr->isRecving)
+                {
+                    info_ptr->remainSize = sendsize-(info_ptr->totalSize-info_ptr->remainSize);
+                    info_ptr->totalSize = sendsize;
+                    info_ptr->isRemoved = true;
+                }
+            }
+        }
+        //客户端接收过程中文件被删除
+        Con_Vec conVec = sendfileMaps[localname];
+        if(!conVec.empty())
+        {
+            for(auto it:conVec)
+            {
+                Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(it->getContext());
+                if(!info_ptr->isIdle)
+                {
+                    info_ptr->isIdle = true;
+                }
+                //从待发送列表中删除
+                auto it_map = sendListMaps.find(info_ptr->username);
+                for(auto it = it_map->second.begin();it!=it_map->second.end();)
+                {
+                    if(it->first == localname)
+                        it_map->second.erase(it);
+                    else
+                        ++it;
+                }
+            }
+        }
+
+
         break;
     }
     case 4:
@@ -210,10 +247,10 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
     if(id!=1 && id!=2)
     {//发送给其它客户端
         {
-            muduo::MutexLockGuard mutexLock(ipMaps_mutex);
-            for(auto it = ipMaps.begin();it!=ipMaps.end();++it)
+            muduo::MutexLockGuard mutexLock(userMaps_mutex);
+            for(auto it = userMaps.begin();it!=userMaps.end();++it)
             {
-                if(it->first == conn->peerAddress().toIp())
+                if(it->first == info_ptr->username)
                     continue;
                 sysutil::send_SyncInfo(it->second[0],id,filename,newFilename);
             }
@@ -226,7 +263,13 @@ void SyncServer::onFileInfo(const muduo::net::TcpConnectionPtr &conn,
 {
     Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
     info_ptr->isRecving = true;
-    string filename = info_ptr->filename = rootDir+message->filename();
+    //文件接收时以隐藏文件存储，隐藏文件名为XXX/.[username][filename]
+    int pos = message->filename().find_last_of('/');
+    string parDir = message->filename().substr(0,pos+1);
+    string subfile = message->filename().substr(pos+1);
+    string filename = info_ptr->receiveFilename = rootDir+parDir+"."+
+            info_ptr->username.c_str()+subfile;
+    CHEN_LOG(INFO,"temp file :%s",filename.c_str());
     info_ptr->totalSize = info_ptr->remainSize = message->size();
     //如果同名文件存在则删除
     if(access(filename.c_str(),F_OK) == 0)
@@ -237,59 +280,73 @@ void SyncServer::onFileInfo(const muduo::net::TcpConnectionPtr &conn,
 
 /**
  * @brief SyncServer::recvFile  从Buffer中接收文件数据，接收完发送给其它客户端
+ * @param conn
  * @param info_ptr
- * @param inputBuffer
  */
 void SyncServer::recvFile(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr &info_ptr)
 {
     int len = conn->inputBuffer()->readableBytes();
     if(len >= info_ptr->remainSize)
     {//文件接收完
-        sysutil::fileRecvfromBuf(info_ptr->filename.c_str(),
+        sysutil::fileRecvfromBuf(info_ptr->receiveFilename.c_str(),
                                  conn->inputBuffer()->peek(),info_ptr->remainSize);
         conn->inputBuffer()->retrieve(info_ptr->remainSize);
         info_ptr->isRecving = false;
         info_ptr->remainSize = 0;
         info_ptr->totalSize = 0;
-        //更新md5Maps
+        if(info_ptr->isRemoved)
+            remove(info_ptr->receiveFilename.c_str());
+        else
         {
-            muduo::MutexLockGuard mutexLock(md5Maps_mutex);
-            md5Maps[info_ptr->filename] = info_ptr->md5;
-        }
-        queueMaps_mutex.lock();
-        CHEN_LOG(INFO,"QUEUE LOCK");
-        //发送给其它客户端
-        for(auto it = queueMaps.begin();it!=queueMaps.end();++it)
-        {
-            if(it->first == conn->peerAddress().toIp())
+            //将原文件删除，隐藏文件改名
+            int pos = info_ptr->receiveFilename.find_last_of('/');
+            string parDir = info_ptr->receiveFilename.substr(0,pos+1);
+            string subfile = info_ptr->receiveFilename.substr(pos+1);
+            string filename = parDir+subfile.substr(info_ptr->username.size()+1);
+            if(access(filename.c_str(),F_OK) == 0)
+                if(::remove(filename.c_str()) < 0)
+                    CHEN_LOG(ERROR,"remove error");
+            if(rename(info_ptr->receiveFilename.c_str(),filename.c_str()) < 0)
+                CHEN_LOG(ERROR,"rename %s error",info_ptr->receiveFilename.c_str());
+
+            //更新md5Maps
             {
-                continue;
+                muduo::MutexLockGuard mutexLock(md5Maps_mutex);
+                md5Maps[filename] = info_ptr->md5;
             }
-            muduo::net::TcpConnectionPtr idleConn = getIdleConn(it->first);
-            if(idleConn == nullptr)
-            {//加入发送队列
+            sendListMaps_mutex.lock();
+            //发送给其它客户端
+            for(auto it = sendListMaps.begin();it!=sendListMaps.end();++it)
+            {
+                if(it->first == info_ptr->username)
                 {
-                    it->second.push(std::bind(&SyncServer::sendfileWithproto,this,
-                                              std::placeholders::_1,info_ptr->filename));
-                    queueMaps_mutex.unlock();
-                    CHEN_LOG(INFO,"QUEUE UNLOCK");
+                    continue;
+                }
+                muduo::net::TcpConnectionPtr idleConn = getIdleConn(it->first);
+                if(idleConn == nullptr)
+                {//加入发送队列
+                    {
+                        it->second.push_back({filename,std::bind(&SyncServer::sendfileWithproto,this,
+                                              std::placeholders::_1,filename)
+                                             });
+                        sendListMaps_mutex.unlock();
+                    }
+                }
+                else
+                {
+                    sendListMaps_mutex.unlock();
+                    sendfileWithproto(idleConn,filename);
                 }
             }
-            else
-            {
-                queueMaps_mutex.unlock();
-                CHEN_LOG(INFO,"QUEUE UNLOCK");
-                sendfileWithproto(idleConn,info_ptr->filename);
-            }
+            sendListMaps_mutex.unlock();
         }
-        queueMaps_mutex.unlock();
-        CHEN_LOG(INFO,"QUEUE UNLOCK");
-        info_ptr->filename.clear();
+        info_ptr->receiveFilename.clear();
         info_ptr->md5.clear();
+        info_ptr->isRemoved = false;
     }
     else
     {
-        sysutil::fileRecvfromBuf(info_ptr->filename.c_str(),
+        sysutil::fileRecvfromBuf(info_ptr->receiveFilename.c_str(),
                                  conn->inputBuffer()->peek(),len);
         conn->inputBuffer()->retrieve(len);
         info_ptr->remainSize -= len;
@@ -302,7 +359,6 @@ void SyncServer::recvFile(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr 
  *        服务端不能和客户端一样阻塞写，要用网络库的接口，socket可写的时候调用回调函数写数据
  * @param conn  文件由此conn发出，此时conn已有context
  * @param localname 本地路径
- * @param remotename    不包含顶层文件夹的文件名
  */
 void SyncServer::sendfileWithproto(const muduo::net::TcpConnectionPtr &conn
                                    ,string &localname)
@@ -328,6 +384,8 @@ void SyncServer::sendfileWithproto(const muduo::net::TcpConnectionPtr &conn
     Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
     info_ptr->isIdle = false;
     info_ptr->fp = fp;
+    info_ptr->sendFilename = localname;
+    sendfileMaps[localname].push_back(conn);
     conn->setWriteCompleteCallback(boost::bind(&SyncServer::onWriteComplete,this,conn));
     //先发送fileInfo信息
     filesync::FileInfo msg;
@@ -350,26 +408,45 @@ void SyncServer::onWriteComplete(const muduo::net::TcpConnectionPtr &conn)
     if (nread > 0)
     {
         conn->send(buf, static_cast<int>(nread));
+        info_ptr->sendSize += nread;
     }
-    else
+    else if(nread <=0 || info_ptr->isIdle == true)
     {
-        Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
+        if(info_ptr->isIdle == true)
+        {//说明该文件已被删除，告知客户端已发送的大小
+            sysutil::send_SyncInfo(userMaps[info_ptr->username][0],3,
+                    info_ptr->sendFilename.substr(rootDir.size()),"",info_ptr->sendSize);
+            CHEN_LOG(INFO,"SEND SIZE :%d",info_ptr->sendSize);
+            info_ptr->sendFilename.clear();
+            info_ptr->sendSize = 0;
+        }
         info_ptr->fp = NULL;
         info_ptr->isIdle = true;
+        auto it_map = sendfileMaps.find(info_ptr->username);
+        if(it_map!=sendfileMaps.end())
+        {//从sendfileMaps删除此次发送
+            for(auto it_vec = it_map->second.begin();it_vec!=it_map->second.end();)
+            {
+                if(it_vec->get() == conn.get())
+                    it_map->second.erase(it_vec);
+                else
+                    ++it_vec;
+            }
+        }
         conn->setWriteCompleteCallback(NULL);
         doNextSend(conn);     //用此连接执行下一个发送任务
     }
 }
 /**
  * @brief SyncServer::getIdleConn  获取该客户端的空闲文件传输连接
- * @param ip                       该客户端的ip
+ * @param username                       该客户端的username
  * @return
  */
-muduo::net::TcpConnectionPtr SyncServer::getIdleConn(muduo::string ip)
+muduo::net::TcpConnectionPtr SyncServer::getIdleConn(string username)
 {
-    ipMaps_mutex.lock();
-    Con_Vec conVec = ipMaps[ip];
-    ipMaps_mutex.unlock();
+    userMaps_mutex.lock();
+    Con_Vec conVec = userMaps[username];
+    userMaps_mutex.unlock();
     for(auto it:conVec)
     {
         Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(it->getContext());
@@ -386,30 +463,27 @@ muduo::net::TcpConnectionPtr SyncServer::getIdleConn(muduo::string ip)
  */
 void SyncServer::doNextSend(const muduo::net::TcpConnectionPtr &conn)
 {
-    queueMaps_mutex.lock();
-    CHEN_LOG(INFO,"QUEUE LOCK");
-    auto it = queueMaps.find(conn->peerAddress().toIp());
-    if(it != queueMaps.end())
+    Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
+    sendListMaps_mutex.lock();
+    auto it = sendListMaps.find(info_ptr->username);
+    if(it != sendListMaps.end())
     {
         if(!it->second.empty())
         {
-            SendTask task = it->second.front();
-            it->second.pop();
-            queueMaps_mutex.unlock();
-            CHEN_LOG(INFO,"QUEUE UNLOCK");
+            SendTask task = it->second.front().second;
+            it->second.pop_front();
+            sendListMaps_mutex.unlock();
             task(conn);
         }
         else
-          queueMaps_mutex.unlock();
+            sendListMaps_mutex.unlock();
     }
     else
     {
-        queueMaps_mutex.unlock();
-        CHEN_LOG(INFO,"QUEUE UNLOCK");
+        sendListMaps_mutex.unlock();
         CHEN_LOG(ERROR,"can't find send queue");
     }
-    queueMaps_mutex.unlock();
-    CHEN_LOG(INFO,"QUEUE UNLOCK");
+    sendListMaps_mutex.unlock();
 }
 
 void SyncServer::syncToClient(const muduo::net::TcpConnectionPtr &conn,string dir,
@@ -443,15 +517,16 @@ void SyncServer::syncToClient(const muduo::net::TcpConnectionPtr &conn,string di
         }
         else
         {
-            muduo::string ip = conn->peerAddress().toIp();
-            muduo::net::TcpConnectionPtr idleConn = getIdleConn(ip);
+            Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
+            string username = info_ptr->username;
+            muduo::net::TcpConnectionPtr idleConn = getIdleConn(username);
             if(idleConn == nullptr)
             {//加入发送队列
-                muduo::MutexLockGuard mutexLock(queueMaps_mutex);
-                CHEN_LOG(INFO,"QUEUE LOCK");
-                queueMaps[ip].push(std::bind(&SyncServer::sendfileWithproto,this,
-                                             std::placeholders::_1,subdir));
-                CHEN_LOG(INFO,"QUEUE UNLOCK");
+                muduo::MutexLockGuard mutexLock(sendListMaps_mutex);
+                sendListMaps[username].push_back(
+                {subdir,std::bind(&SyncServer::sendfileWithproto,this,
+                 std::placeholders::_1,subdir)
+                            });
             }
             else
                 sendfileWithproto(idleConn,subdir);

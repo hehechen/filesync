@@ -29,7 +29,7 @@ namespace sysutil{
                            const char* localname,const char *remotename);
     //发送syncInfo信息
     void send_SyncInfo(const muduo::net::TcpConnectionPtr &conn, int id, std::string filename,
-                                        std::string newname = "");
+                                        std::string newname = "", int removedSize=-1);
     //同步整个文件夹
     void sync_Dir(int socketfd, std::string root, std::string dir);
     //利用qt库获取md5，支持大文件

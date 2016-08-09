@@ -8,10 +8,14 @@ message SyncInfo
     optional string MD5 = 5;    //文件的md5
 }
 
-message Init
-{//初始化
+message SignIn
+{//登录
     required string username = 1;
     required string password = 2;
+}
+
+message Init
+{//初始化
     repeated SyncInfo info = 3;
 }
 

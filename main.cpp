@@ -1,5 +1,6 @@
 #include "syncserver.h"
 
+using namespace std;
 int main()
 {
     muduo::net::EventLoop loop;

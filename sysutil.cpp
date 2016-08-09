@@ -226,23 +226,25 @@ void fileRecvfromBuf(const char *filename,const char *buf,int size)
     }
     lseek(fd,0,SEEK_END);
     if(write(fd,buf,size) < 0)
-        CHEN_LOG(ERROR,"write file error");
+        CHEN_LOG(ERROR,"write file %s to %d error",filename,fd);
     close(fd);
 }
 
 /**
- * @brief send_SyncInfo  发送SyncInfo信息
+ * @brief send_SyncInfo  发送SyncInfo信息，线程安全
  * @param conn
- * @param id
+ * @param id    0是创建文件夹，1是create文件，2是modify,3是删除，4是重命名
  * @param filename
  * @param newname       新文件名，发送重命名信息时才用
+ * @param removedSize   删除正在发送的文件时，已发送的大小
  */
 void send_SyncInfo(const muduo::net::TcpConnectionPtr &conn, int id,
-                   string filename, string newname)
+                   string filename, string newname,int removedSize)
 {
     filesync::SyncInfo msg;
     msg.set_id(id);
     msg.set_filename(filename);
+    msg.set_size(removedSize);
     if(4 == id) //重命名
         msg.set_newfilename(newname);
     string send = Codec::enCode(msg);
@@ -303,4 +305,3 @@ string getFileMd5(string filePath)
 
 
 }
-
