@@ -22,7 +22,8 @@ struct Info_Conn{
     std::string username;
     bool isIdle = true;    //是否可发送
     bool isRecving = false; //是否正在接收文件
-    bool isRemoved = false; //接收到一半被删除
+    bool isRemoved_receving = false; //接收到一半被删除
+    bool isRemoved_sending = false; //发送到一半被删除
     int totalSize = 0;      //要接收文件的大小
     int remainSize = 0;        //还未接收的大小
     int sendSize = 0;   //已发送的文件大小
@@ -84,6 +85,8 @@ private:
     void onSyncInfo(const muduo::net::TcpConnectionPtr &conn, const SyncInfoPtr &message);
     void onSendFile(muduo::net::TcpConnectionPtr &conn,MessagePtr message);
     void onFileInfo(const muduo::net::TcpConnectionPtr &conn, const FileInfoPtr &message);
+
+    void handleRemove_sending(std::string localname);
 
     //找出客户端不存在的文件并发送给客户端
     void recvFile(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr &info_ptr);

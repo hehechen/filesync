@@ -165,6 +165,7 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
                 {
                     break;      //已有相同文件则跳过
                 }
+            md5Maps[localname] = message->md5();
         }
         //向客户端发送sendfile命令
         filesync::SendFile msg;
@@ -207,33 +208,11 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
                 {
                     info_ptr->remainSize = sendsize-(info_ptr->totalSize-info_ptr->remainSize);
                     info_ptr->totalSize = sendsize;
-                    info_ptr->isRemoved = true;
+                    info_ptr->isRemoved_receving = true;
                 }
             }
         }
-        //客户端接收过程中文件被删除
-        Con_Vec conVec = sendfileMaps[localname];
-        if(!conVec.empty())
-        {
-            for(auto it:conVec)
-            {
-                Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(it->getContext());
-                if(!info_ptr->isIdle)
-                {
-                    info_ptr->isIdle = true;
-                }
-                //从待发送列表中删除
-                auto it_map = sendListMaps.find(info_ptr->username);
-                for(auto it = it_map->second.begin();it!=it_map->second.end();)
-                {
-                    if(it->first == localname)
-                        it_map->second.erase(it);
-                    else
-                        ++it;
-                }
-            }
-        }
-
+        handleRemove_sending(localname);
 
         break;
     }
@@ -280,6 +259,32 @@ void SyncServer::onFileInfo(const muduo::net::TcpConnectionPtr &conn,
     recvFile(conn,info_ptr);
 }
 
+//客户端接收过程中文件被删除
+void SyncServer::handleRemove_sending(string localname)
+{
+    Con_Vec conVec = sendfileMaps[localname];
+    if(!conVec.empty())
+    {
+        for(auto it:conVec)
+        {
+            Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(it->getContext());
+            if(!info_ptr->isIdle)
+            {
+                info_ptr->isRemoved_sending = true;
+            }
+            //从待发送列表中删除
+            auto it_map = sendListMaps.find(info_ptr->username);
+            for(auto it = it_map->second.begin();it!=it_map->second.end();)
+            {
+                if(it->first == localname)
+                    it_map->second.erase(it);
+                else
+                    ++it;
+            }
+        }
+    }
+}
+
 /**
  * @brief SyncServer::recvFile  从Buffer中接收文件数据，接收完发送给其它客户端
  * @param conn
@@ -296,7 +301,7 @@ void SyncServer::recvFile(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr 
         info_ptr->isRecving = false;
         info_ptr->remainSize = 0;
         info_ptr->totalSize = 0;
-        if(info_ptr->isRemoved)
+        if(info_ptr->isRemoved_receving)
             remove(info_ptr->receiveFilename.c_str());
         else
         {
@@ -311,13 +316,9 @@ void SyncServer::recvFile(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr 
             if(rename(info_ptr->receiveFilename.c_str(),filename.c_str()) < 0)
                 CHEN_LOG(ERROR,"rename %s error",info_ptr->receiveFilename.c_str());
             CHEN_LOG(INFO,"receive file COMPLETED:%s",filename.c_str());
-            //更新md5Maps
-            {
-                muduo::MutexLockGuard mutexLock(md5Maps_mutex);
-                md5Maps[filename] = info_ptr->md5;
-            }
             sendListMaps_mutex.lock();
             //发送给其它客户端
+            handleRemove_sending(filename);//将正在发送的同名文件取消发送
             for(auto it = sendListMaps.begin();it!=sendListMaps.end();++it)
             {
                 if(it->first == info_ptr->username)
@@ -344,14 +345,13 @@ void SyncServer::recvFile(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr 
         }
         info_ptr->receiveFilename.clear();
         info_ptr->md5.clear();
-        info_ptr->isRemoved = false;
+        info_ptr->isRemoved_receving = false;
         //如果buffer还有数据则继续解析
         if(conn->inputBuffer()->readableBytes() > 0)
             onMessage(conn,conn->inputBuffer(),muduo::Timestamp::now());
     }
     else
     {
-        CHEN_LOG(INFO,"receivING file :%s",info_ptr->receiveFilename.c_str());
         sysutil::fileRecvfromBuf(info_ptr->receiveFilename.c_str(),
                                  conn->inputBuffer()->peek(),len);
         conn->inputBuffer()->retrieve(len);
@@ -410,18 +410,14 @@ void SyncServer::onWriteComplete(const muduo::net::TcpConnectionPtr &conn)
 {
     Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(conn->getContext());
     FILE* fp = info_ptr->fp;
+    size_t nread = -1;
     char buf[64*1024];          //一次发64k
-    size_t nread = ::fread(buf, 1, sizeof buf, fp);
-    if (nread > 0)
-    {
-        conn->send(buf, static_cast<int>(nread));
-        info_ptr->sendSize += nread;
-        CHEN_LOG(INFO,"SENDing FILE :%s",info_ptr->sendFilename.c_str());
-    }
-    else if(nread <=0 || info_ptr->isIdle == true)
+    if(!info_ptr->isRemoved_sending)
+        nread = ::fread(buf, 1, sizeof buf, fp);
+    if(nread <=0 || info_ptr->isRemoved_sending)
     {
         CHEN_LOG(INFO,"SEND FILE completed:%s",info_ptr->sendFilename.c_str());
-        if(info_ptr->isIdle == true)
+        if(info_ptr->isRemoved_sending)
         {//说明该文件已被删除，告知客户端已发送的大小
             sysutil::send_SyncInfo(userMaps[info_ptr->username][0],3,
                     info_ptr->sendFilename.substr(rootDir.size()),"",info_ptr->sendSize);
@@ -429,8 +425,6 @@ void SyncServer::onWriteComplete(const muduo::net::TcpConnectionPtr &conn)
             info_ptr->sendFilename.clear();
             info_ptr->sendSize = 0;
         }
-        info_ptr->fp = NULL;
-        info_ptr->isIdle = true;
         auto it_map = sendfileMaps.find(info_ptr->username);
         if(it_map!=sendfileMaps.end())
         {//从sendfileMaps删除此次发送
@@ -443,8 +437,18 @@ void SyncServer::onWriteComplete(const muduo::net::TcpConnectionPtr &conn)
             }
         }
         conn->setWriteCompleteCallback(NULL);
+        info_ptr->fp = NULL;
+        info_ptr->isIdle = true;
+        info_ptr->isRemoved_sending = false;
         doNextSend(conn);     //用此连接执行下一个发送任务
     }
+    else if (nread > 0)
+    {
+        conn->send(buf, static_cast<int>(nread));
+        info_ptr->sendSize += nread;
+        CHEN_LOG(INFO,"TOTAL NREAD:%d",info_ptr->sendSize);
+    }
+
 }
 /**
  * @brief SyncServer::getIdleConn  获取该客户端的空闲文件传输连接
