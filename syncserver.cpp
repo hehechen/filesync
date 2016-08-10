@@ -162,14 +162,16 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
             auto it = md5Maps.find(localname);
             if(it != md5Maps.end())
                 if(it->second == message->md5())
+                {
                     break;      //已有相同文件则跳过
+                }
         }
         //向客户端发送sendfile命令
         filesync::SendFile msg;
         msg.set_id(1);
         msg.set_filename(filename);
         string cmd = codec.enCode(msg);
-        CHEN_LOG(DEBUG,"command sendfile :----%s",filename.c_str());
+        CHEN_LOG(INFO,"command sendfile :----%s",filename.c_str());
         conn->send(cmd);
         break;
     }
@@ -238,7 +240,7 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
     case 4:
     {//重命名
         if(rename(localname.c_str(),(rootDir+newFilename).c_str()) < 0)
-            CHEN_LOG(ERROR,"rename %s error",localname.c_str());
+            CHEN_LOG(WARN,"rename %s error",localname.c_str());
         CHEN_LOG(DEBUG,"rename %s to %s",localname.c_str(),
                  (rootDir+newFilename).c_str());
         break;
@@ -308,7 +310,7 @@ void SyncServer::recvFile(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr 
                     CHEN_LOG(ERROR,"remove error");
             if(rename(info_ptr->receiveFilename.c_str(),filename.c_str()) < 0)
                 CHEN_LOG(ERROR,"rename %s error",info_ptr->receiveFilename.c_str());
-
+            CHEN_LOG(INFO,"receive file COMPLETED:%s",filename.c_str());
             //更新md5Maps
             {
                 muduo::MutexLockGuard mutexLock(md5Maps_mutex);
@@ -343,9 +345,13 @@ void SyncServer::recvFile(const muduo::net::TcpConnectionPtr &conn,Info_ConnPtr 
         info_ptr->receiveFilename.clear();
         info_ptr->md5.clear();
         info_ptr->isRemoved = false;
+        //如果buffer还有数据则继续解析
+        if(conn->inputBuffer()->readableBytes() > 0)
+            onMessage(conn,conn->inputBuffer(),muduo::Timestamp::now());
     }
     else
     {
+        CHEN_LOG(INFO,"receivING file :%s",info_ptr->receiveFilename.c_str());
         sysutil::fileRecvfromBuf(info_ptr->receiveFilename.c_str(),
                                  conn->inputBuffer()->peek(),len);
         conn->inputBuffer()->retrieve(len);
@@ -392,6 +398,7 @@ void SyncServer::sendfileWithproto(const muduo::net::TcpConnectionPtr &conn
     msg.set_size(bytes_to_send);
     msg.set_filename(localname.substr(rootDir.size()));
     conn->send(Codec::enCode(msg));
+    CHEN_LOG(INFO,"SEND FILEINFO :%s",localname.c_str());
 }
 
 /**
@@ -409,9 +416,11 @@ void SyncServer::onWriteComplete(const muduo::net::TcpConnectionPtr &conn)
     {
         conn->send(buf, static_cast<int>(nread));
         info_ptr->sendSize += nread;
+        CHEN_LOG(INFO,"SENDing FILE :%s",info_ptr->sendFilename.c_str());
     }
     else if(nread <=0 || info_ptr->isIdle == true)
     {
+        CHEN_LOG(INFO,"SEND FILE completed:%s",info_ptr->sendFilename.c_str());
         if(info_ptr->isIdle == true)
         {//说明该文件已被删除，告知客户端已发送的大小
             sysutil::send_SyncInfo(userMaps[info_ptr->username][0],3,
@@ -495,7 +504,7 @@ void SyncServer::syncToClient(const muduo::net::TcpConnectionPtr &conn,string di
     struct dirent *dent;
     while((dent = readdir(odir)) != NULL)
     {
-        if (dent->d_name[0] == '.') //隐藏文件跳过
+        if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0)
             continue;
         string subdir = string(dir) + dent->d_name;
         string remote_subdir = subdir.substr(rootDir.size());
@@ -544,7 +553,7 @@ void SyncServer::initMd5(string dir)
     struct dirent *dent;
     while((dent = readdir(odir)) != NULL)
     {
-        if (dent->d_name[0] == '.') //隐藏文件跳过
+        if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0)
             continue;
         string subdir = string(dir) + dent->d_name;
         if(dent->d_type == DT_DIR)
