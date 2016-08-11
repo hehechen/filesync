@@ -188,7 +188,7 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
             CHEN_LOG(INFO,"file %s don't exit",localname.c_str());
         else
         {
-            CHEN_LOG(INFO,"remove file %s",localname.c_str());
+//            CHEN_LOG(INFO,"remove file %s",localname.c_str());
             char rmCmd[512];
             sprintf(rmCmd,"rm -rf %s",localname.c_str());
             system(rmCmd);
@@ -199,7 +199,7 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
             int pos = message->filename().find_last_of('/');
             string parDir = message->filename().substr(0,pos+1);
             string subfile = message->filename().substr(pos+1);
-            string filename = rootDir+parDir+"."+ info_ptr->username.c_str()+subfile;
+            string filename = rootDir+parDir+"."+ info_ptr->username+subfile;
             Con_Vec conVec = userMaps[info_ptr->username];
             for(auto it = conVec.begin();it != conVec.end();++it)
             {
@@ -209,6 +209,7 @@ void SyncServer::onSyncInfo(const muduo::net::TcpConnectionPtr &conn,
                     info_ptr->remainSize = sendsize-(info_ptr->totalSize-info_ptr->remainSize);
                     info_ptr->totalSize = sendsize;
                     info_ptr->isRemoved_receving = true;
+                    recvFile(*it,info_ptr);
                 }
             }
         }
@@ -268,9 +269,10 @@ void SyncServer::handleRemove_sending(string localname)
         for(auto it:conVec)
         {
             Info_ConnPtr info_ptr = boost::any_cast<Info_ConnPtr>(it->getContext());
-            if(!info_ptr->isIdle)
+            if(!info_ptr->isIdle && info_ptr->sendFilename == localname)
             {
                 info_ptr->isRemoved_sending = true;
+                CHEN_LOG(INFO,"REMOVING SENDING FILE%s",localname.c_str());
             }
             //从待发送列表中删除
             auto it_map = sendListMaps.find(info_ptr->username);
@@ -422,8 +424,6 @@ void SyncServer::onWriteComplete(const muduo::net::TcpConnectionPtr &conn)
             sysutil::send_SyncInfo(userMaps[info_ptr->username][0],3,
                     info_ptr->sendFilename.substr(rootDir.size()),"",info_ptr->sendSize);
             CHEN_LOG(INFO,"SEND SIZE :%d",info_ptr->sendSize);
-            info_ptr->sendFilename.clear();
-            info_ptr->sendSize = 0;
         }
         auto it_map = sendfileMaps.find(info_ptr->username);
         if(it_map!=sendfileMaps.end())
@@ -440,13 +440,14 @@ void SyncServer::onWriteComplete(const muduo::net::TcpConnectionPtr &conn)
         info_ptr->fp = NULL;
         info_ptr->isIdle = true;
         info_ptr->isRemoved_sending = false;
+        info_ptr->sendSize = 0;
+        info_ptr->sendFilename.clear();
         doNextSend(conn);     //用此连接执行下一个发送任务
     }
     else if (nread > 0)
     {
         conn->send(buf, static_cast<int>(nread));
         info_ptr->sendSize += nread;
-        CHEN_LOG(INFO,"TOTAL NREAD:%d",info_ptr->sendSize);
     }
 
 }
