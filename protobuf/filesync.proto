@@ -25,9 +25,35 @@ message SendFile
     required string filename = 2;   
 }
 
+//服务端没有，客户端有的【空洞】
+message HoleInfo
+{
+    required int32 start = 1;
+    required int32 length = 2;
+}
+
+message Sendfile_Rsync
+{
+    repeated HoleInfo;
+}
+
 message IsControl
 {//这是传输通道
     required int32 id = 1;
+}
+
+//客户端向服务端发送rsync所需的各块的adler32和md5
+message BlockInfo
+{
+    required int32 adler32 = 1;
+    required int32 md5 = 2;
+    required int32 offset = 3;    //此数据块在原文件中的位置
+}
+
+message RsyncInfo
+{
+    required string filename = 1;
+    required repeated BlockInfo = 2;
 }
 /*****以上是控制通道负责*********/
 /*****以下是文件传输通道********/

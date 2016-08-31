@@ -27,7 +27,10 @@ SOURCES += main.cpp \
     codec.cpp \
     parseconfig.cpp \
     str_tool.cpp \
-    test/parsetest.cpp
+    test/parsetest.cpp \
+    rsync.cpp \
+    test/rsynctest.cpp \
+    test/oobServer.cpp
 
 HEADERS += \
     socket.h \
@@ -38,7 +41,8 @@ HEADERS += \
     protobuf/filesync.pb.h \
     codec.h \
     parseconfig.h \
-    str_tool.h
+    str_tool.h \
+    rsync.h
 
 DISTFILES += \
     protobuf/filesync.proto

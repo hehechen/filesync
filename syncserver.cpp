@@ -421,8 +421,11 @@ void SyncServer::onWriteComplete(const muduo::net::TcpConnectionPtr &conn)
         CHEN_LOG(INFO,"SEND FILE completed:%s",info_ptr->sendFilename.c_str());
         if(info_ptr->isRemoved_sending)
         {//说明该文件已被删除，告知客户端已发送的大小
-            sysutil::send_SyncInfo(userMaps[info_ptr->username][0],3,
-                    info_ptr->sendFilename.substr(rootDir.size()),"",info_ptr->sendSize);
+//            sysutil::send_SyncInfo(userMaps[info_ptr->username][0],3,
+//                    info_ptr->sendFilename.substr(rootDir.size()),"",info_ptr->sendSize);
+            char buf[10] = {0};
+            sprintf(buf,"%d",info_ptr->sendSize);
+            conn->sendOOB(buf,sizeof(buf));
             CHEN_LOG(INFO,"SEND SIZE :%d",info_ptr->sendSize);
         }
         auto it_map = sendfileMaps.find(info_ptr->username);

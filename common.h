@@ -59,7 +59,7 @@ static const char* LOG_STR[] = {
     char msg[1024];                        \
     char buf[32];                                   \
     sprintf(msg, format, ##__VA_ARGS__);             \
-    if (level >= INFO) {\
+    if (level >= 0) {\
         time_t now = time(NULL);                      \
         strftime(buf, sizeof(buf), "%H:%M:%S", localtime(&now)); \
         fprintf(stdout, "[%s] [%s] [file:%s] [line:%d] [tid:%ld] %s\n",buf,   \

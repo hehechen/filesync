@@ -124,6 +124,40 @@ string getFileMd5(string filePath)
     QString md5 = ch.result().toHex();
     return md5.toStdString();
 }
+//获取字符串的md5
+string getStringMd5(char *buffer)
+{
+    QCryptographicHash ch(QCryptographicHash::Md5);
+    QByteArray buf(buffer);
+    ch.addData(buf);
+    QString md5 = ch.result().toHex();
+    return md5.toStdString();
+}
+
+
+unsigned int adler32(char * data, int len)
+/* where data is the location of the data in physical memory and len is the length of the data in bytes */
+{
+    unsigned int a = 1, b = 0;
+    int index;
+
+    /* Process each byte of the data in order */
+    for (index = 0; index < len; ++index)
+    {
+        a = a + data[index];
+        b = b + a ;
+    }
+    return (b * 65536) + a;
+}
+unsigned int adler32_rolling_checksum(unsigned int csum, int len, char c1, char c2)
+{
+    unsigned int s1, s2;
+    s1 = (csum & 0xffff);
+    s2 = (csum >> 16);
+    s1 = (s1- c1) + c2;
+    s2 = s2- (len * c1 - s1)-1;
+    return  (s2 * 65536) + s1;
+}
 
 
 }
